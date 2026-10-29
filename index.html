@@ -138,9 +138,10 @@ label.chk input{width:18px;height:18px;accent-color:var(--ink)}
 .chip.on{border-color:var(--ink)}
 .chip.plain{padding:4px 12px}
 
-.ad-wrap{flex:none;border-top:1px solid var(--line);padding:8px 14px 12px}
-.ad-label{font-size:11px;color:#9aa1b0;margin-bottom:4px}
-.ad-slot{height:90px;max-width:320px;margin:0 auto;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.app.has-ad{grid-template-columns:160px minmax(0,1fr) 400px;max-width:1560px}
+.ad-wrap{align-self:start;position:sticky;top:70px}
+.ad-label{font-size:11px;color:#9aa1b0;margin-bottom:4px;text-align:center}
+.ad-slot{width:160px;height:600px;max-height:calc(100vh - 110px);border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center}
 .ad-slot.empty{border:1px dashed #c9d0dc;color:#a3aab8;font-size:13px}
 
 /* ---------- export dialog ---------- */
@@ -170,7 +171,7 @@ label.chk input{width:18px;height:18px;accent-color:var(--ink)}
 .bot-quick{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;flex:none}
 .bot-quick button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700}
 .bot-form{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}
-.bot-form input{flex:1;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:15px;background:var(--soft)}
+.bot-form input{flex:1;min-width:0;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:16px;background:var(--soft)}
 .bot-form input:focus{outline:none;border-color:var(--ink);background:#fff}
 
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw;text-align:center}
@@ -191,6 +192,9 @@ footer b{color:var(--ink)}
   .side{overflow:visible}
   .tabs{position:sticky;top:58px;background:#fff;z-index:5;border-radius:22px 22px 0 0}
   .page{overflow:visible}
+  .app.has-ad{grid-template-columns:1fr}
+  .ad-wrap{order:5;position:static}
+  .ad-slot{width:min(100%,320px);height:100px;margin:0 auto}
   .flag-grid{max-height:52vh;overflow:auto;overscroll-behavior:contain}
   .empty-hint .wide{display:none}.empty-hint .narrow{display:inline}
   .empty-hint b{font-size:21px}
@@ -220,6 +224,11 @@ footer b{color:var(--ink)}
 </header>
 
 <div class="app">
+  <!-- The one and only ad spot: a narrow column on the left. -->
+  <aside class="ad-wrap" id="adWrap" hidden>
+    <div class="ad-label">Advertisement</div>
+    <div class="ad-slot" id="adSlot"></div>
+  </aside>
   <main class="stage">
     <div class="canvas-wrap">
       <canvas id="cv" aria-label="Your countryball"></canvas>
@@ -322,11 +331,6 @@ footer b{color:var(--ink)}
       <button class="btn quiet warn" onclick="resetAll()">♻ Clear everything</button>
     </section>
 
-    <!-- The one and only ad spot. Keep it small. -->
-    <div class="ad-wrap" id="adWrap" hidden>
-      <div class="ad-label">Advertisement</div>
-      <div class="ad-slot" id="adSlot"></div>
-    </div>
   </aside>
 </div>
 
@@ -371,7 +375,7 @@ footer b{color:var(--ink)}
   <div class="bot-head"><canvas class="face" width="72" height="72"></canvas><div><b>Bally</b><small>Countryball helper</small></div><button onclick="closeBot()" aria-label="Close help">×</button></div>
   <div class="bot-msgs" id="botMsgs" aria-live="polite"></div>
   <div class="bot-quick" id="botQuick"></div>
-  <form class="bot-form" id="botForm"><input id="botIn" placeholder="Ask how to do something…" autocomplete="off" aria-label="Your question"><button class="btn small main" type="submit">Send</button></form>
+  <form class="bot-form" id="botForm"><input id="botIn" placeholder="Ask, or tell me what to make…" autocomplete="off" aria-label="Your question"><button class="btn small main" type="submit">Send</button></form>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -553,22 +557,79 @@ function star(c, x, y, r) {
   c.closePath();
 }
 const line = (c, pts, w, col) => { c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round'; c.strokeStyle = col || INK; c.stroke(); };
-const EX = 75;
-const EYE = { w: 300, h: 150, dy: -0.12, group: 'eye' };
+/* Countryball eyes: small white ovals with a thick outline. The feeling comes from where the
+   eyelid cuts the eye (a straight line), not from big pupils.
+   top / bot = eyelid line as [outer edge, inner edge] offsets from the eye center (y grows down). */
+const EX = 64, ERX = 30, ERY = 38, ELW = 8;
+function eye(c, x, y, side, o = {}) {
+  const rx = o.rx || ERX, ry = o.ry || ERY;
+  const L = x - rx - 12, Rr = x + rx + 12;
+  // side -1 = left eye (outer edge is on the left), +1 = right eye
+  const at = (pair, t) => { const [outer, inner] = pair; const a = side < 0 ? outer : inner, b = side < 0 ? inner : outer; return y + a + (b - a) * t; };
+  c.save(); c.beginPath();
+  c.moveTo(L, o.top ? at(o.top, 0) : y - ry - 20); c.lineTo(Rr, o.top ? at(o.top, 1) : y - ry - 20);
+  c.lineTo(Rr, o.bot ? at(o.bot, 1) : y + ry + 20); c.lineTo(L, o.bot ? at(o.bot, 0) : y + ry + 20); c.closePath(); c.clip();
+  c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill();
+  if (o.pupil) { const p = o.pupil; c.beginPath(); c.arc(x + (p.dx || 0) * (side < 0 && p.mirror ? -1 : 1), y + (p.dy || 0), p.r, 0, Math.PI * 2); c.fillStyle = INK; c.fill(); }
+  if (o.inner) o.inner(c, x, y);
+  c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); c.lineWidth = ELW; c.strokeStyle = INK; c.stroke();
+  c.restore();
+  // eyelid lines, trimmed to the eye outline
+  c.save(); c.beginPath(); c.ellipse(x, y, rx + ELW / 2, ry + ELW / 2, 0, 0, Math.PI * 2); c.clip();
+  c.lineWidth = ELW; c.strokeStyle = INK; c.lineCap = 'butt';
+  for (const k of ['top', 'bot']) if (o[k]) { c.beginPath(); c.moveTo(L, at(o[k], 0)); c.lineTo(Rr, at(o[k], 1)); c.stroke(); }
+  c.restore();
+}
+const both = (c, o, oR) => { eye(c, -EX, 0, -1, o); eye(c, EX, 0, 1, oR || o); };
+const arcEye = (c, x, y, up) => { c.beginPath(); up ? c.arc(x, y + 14, 28, Math.PI * 1.12, Math.PI * 1.88) : c.arc(x, y - 12, 28, Math.PI * .12, Math.PI * .88); c.lineWidth = 9; c.lineCap = 'round'; c.strokeStyle = INK; c.stroke(); };
+const EYE = { w: 220, h: 110, dy: -0.12, group: 'eye' };
+const EYES = {
+  classic:   { name: 'Normal', draw(c) { both(c, {}); } },
+  happy:     { name: 'Happy', draw(c) { arcEye(c, -EX, 0, true); arcEye(c, EX, 0, true); } },
+  angry:     { name: 'Angry', draw(c) { both(c, { top: [-36, 2] }); } },
+  furious:   { name: 'Furious', draw(c) { both(c, { top: [-30, 10], pupil: { r: 6, dy: 14 } }); } },
+  sad:       { name: 'Sad', draw(c) { both(c, { top: [6, -30] }); } },
+  crying:    { name: 'Crying', w: 220, h: 200, draw(c) {
+      for (const x of [-EX, EX]) { c.beginPath(); rr(c, x - 9, 22, 18, 74, 9); c.fillStyle = '#5cc8ff'; c.fill(); c.lineWidth = 4; c.strokeStyle = '#1b7fc4'; c.stroke(); }
+      both(c, { top: [6, -30] });
+    } },
+  lined:     { name: 'Unamused', draw(c) { both(c, { top: [-4, -4] }); } },
+  smug:      { name: 'Smug', draw(c) { both(c, { top: [-2, -10], bot: [26, 30], pupil: { r: 8, dx: 12, dy: 6 } }); } },
+  squint:    { name: 'Suspicious', draw(c) { eye(c, -EX, 0, -1, { top: [-8, -2] }); eye(c, EX, 0, 1, { top: [2, 6], bot: [24, 22] }); } },
+  side:      { name: 'Side-eye', draw(c) { both(c, { top: [-10, -10], pupil: { r: 9, dx: 15, dy: 4 } }); } },
+  surprised: { name: 'Surprised', draw(c) { both(c, { rx: 34, ry: 46, pupil: { r: 6 } }); } },
+  scared:    { name: 'Scared', draw(c) {
+      both(c, { rx: 32, ry: 44, top: [-34, -50], pupil: { r: 5, dy: 6 } });
+      c.lineWidth = 5; c.lineCap = 'round'; c.strokeStyle = INK;
+      for (const s of [-1, 1]) for (const i of [0, 1]) { c.beginPath(); c.moveTo(s * (EX + 44 + i * 10), -12 + i * 14); c.lineTo(s * (EX + 50 + i * 10), -4 + i * 14); c.stroke(); }
+    } },
+  determined:{ name: 'Determined', draw(c) { both(c, { top: [-20, 0], bot: [26, 26] }); } },
+  laughing:  { name: 'Laughing', draw(c) {
+      line(c, [[-EX - 24, -22], [-EX + 18, 0], [-EX - 24, 22]], 10);
+      line(c, [[EX + 24, -22], [EX - 18, 0], [EX + 24, 22]], 10);
+    } },
+  wink:      { name: 'Wink', draw(c) { eye(c, -EX, 0, -1, {}); arcEye(c, EX, 0, true); } },
+  sleepy:    { name: 'Sleepy', draw(c) {
+      arcEye(c, -EX, 0, false); arcEye(c, EX, 0, false);
+      c.fillStyle = INK; c.font = '800 34px "Baloo 2",sans-serif'; c.textAlign = 'center'; c.fillText('z', EX + 58, -18); c.font = '800 24px "Baloo 2",sans-serif'; c.fillText('z', EX + 80, -40);
+    } },
+  tired:     { name: 'Tired', draw(c) {
+      both(c, { top: [2, 6] });
+      c.lineWidth = 4; c.strokeStyle = '#8a7d9a'; c.lineCap = 'round';
+      for (const x of [-EX, EX]) { c.beginPath(); c.arc(x, 30, 26, Math.PI * .2, Math.PI * .8); c.stroke(); }
+    } },
+  love:      { name: 'In love', draw(c) { for (const x of [-EX, EX]) { heart(c, x, 6, 1.25); c.fillStyle = '#ef3b4f'; c.fill(); c.lineWidth = 6; c.strokeStyle = INK; c.lineJoin = 'round'; c.stroke(); } } },
+  stars:     { name: 'Starstruck', draw(c) { both(c, { rx: 32, ry: 40, inner: (g, x, y) => { star(g, x, y + 2, 22); g.fillStyle = '#ffc61a'; g.fill(); } }); } },
+  dead:      { name: 'Dead', draw(c) { for (const x of [-EX, EX]) { line(c, [[x - 22, -22], [x + 22, 22]], 10); line(c, [[x + 22, -22], [x - 22, 22]], 10); } } },
+  derp:      { name: 'Derp', draw(c) {
+      eye(c, -EX, 0, -1, { rx: 34, ry: 42, pupil: { r: 9, dx: -10, dy: 12 } });
+      eye(c, EX, -6, 1, { rx: 22, ry: 28, pupil: { r: 7, dx: 6, dy: -8 } });
+    } },
+};
 const STICKERS = {
-  /* ---- eyes ---- */
-  classic:   { ...EYE, name: 'Classic', draw(c) { eyeWhite(c, -EX, 0, 46, 54); eyeWhite(c, EX, 0, 46, 54); } },
-  lined:     { ...EYE, name: 'Bored', draw(c) { lidEye(c, -EX, 0, 46, 54, -14, -14); lidEye(c, EX, 0, 46, 54, -14, -14); } },
-  angry:     { ...EYE, name: 'Angry', draw(c) { lidEye(c, -EX, 0, 46, 54, -50, -2); lidEye(c, EX, 0, 46, 54, -2, -50); } },
-  sad:       { ...EYE, name: 'Sad', draw(c) { lidEye(c, -EX, 0, 46, 54, -2, -48); lidEye(c, EX, 0, 46, 54, -48, -2); } },
-  happy:     { ...EYE, name: 'Happy', draw(c) { c.lineWidth = 12; c.lineCap = 'round'; c.strokeStyle = INK; for (const x of [-EX, EX]) { c.beginPath(); c.arc(x, 22, 42, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); } } },
-  surprised: { ...EYE, name: 'Surprised', draw(c) { for (const x of [-EX, EX]) { eyeWhite(c, x, 0, 54, 62); c.beginPath(); c.arc(x, 0, 9, 0, Math.PI * 2); c.fillStyle = INK; c.fill(); } } },
-  side:      { ...EYE, name: 'Side-eye', draw(c) { for (const x of [-EX, EX]) { eyeWhite(c, x, 0, 46, 54); c.beginPath(); c.arc(x + 22, 4, 13, 0, Math.PI * 2); c.fillStyle = INK; c.fill(); } } },
-  squint:    { ...EYE, name: 'Suspicious', draw(c) { lidEye(c, -EX, 0, 46, 54, -14, -14); lidEye(c, EX, 0, 46, 54, 8, 8); } },
-  wink:      { ...EYE, name: 'Wink', draw(c) { eyeWhite(c, -EX, 0, 46, 54); c.lineWidth = 12; c.lineCap = 'round'; c.strokeStyle = INK; c.beginPath(); c.arc(EX, 22, 42, Math.PI * 1.08, Math.PI * 1.92); c.stroke(); } },
-  sleepy:    { ...EYE, name: 'Sleepy', draw(c) { for (const x of [-EX, EX]) { c.beginPath(); c.arc(x, -6, 40, Math.PI * .12, Math.PI * .88); c.lineWidth = 12; c.lineCap = 'round'; c.strokeStyle = INK; c.stroke(); } } },
-  dead:      { ...EYE, name: 'Dead', draw(c) { for (const x of [-EX, EX]) { eyeWhite(c, x, 0, 46, 54); line(c, [[x - 22, -22], [x + 22, 22]], 9); line(c, [[x + 22, -22], [x - 22, 22]], 9); } } },
-  love:      { ...EYE, name: 'In love', draw(c) { for (const x of [-EX, EX]) { eyeWhite(c, x, 0, 46, 54); heart(c, x, 4, 1); c.fillStyle = '#e63946'; c.fill(); } } },
+  // eyes are drawn on a small grid, then scaled to a good size on the face
+  ...Object.fromEntries(Object.entries(EYES).map(([k, v]) => { const K = 1.32, d = { ...EYE, ...v };
+    return [k, { ...d, w: d.w * K, h: d.h * K, draw(c, s) { c.save(); c.scale(K, K); v.draw(c, s); c.restore(); } }]; })),
   /* ---- hats ---- */
   tophat: { name: 'Top Hat', group: 'hat', w: 240, h: 220, dy: -1.12,
     draw(c) {
@@ -986,14 +1047,14 @@ for (const [k, sh] of Object.entries(SHAPES)) {
   b.onclick = () => setShape(k);
   $('shapes').appendChild(b);
 }
-function setShape(k) {
+function setShape(k, quiet) {
   if (state.shape === k) return;
   const from = SH(), to = SHAPES[k];
   state.stickers.forEach(s => {
     const hat = STICKERS[s.type].group === 'hat', a = anchor(from, hat), b = anchor(to, hat), r = to.face.s / from.face.s;
     s.x = b.x + (s.x - a.x) * r; s.y = b.y + (s.y - a.y) * r; s.s *= r;
   });
-  state.shape = k; buildMask(); pushHistory(); syncUI(); render();
+  state.shape = k; buildMask(); if (!quiet) pushHistory(); syncUI(); render();
 }
 
 /* ================== DRAW PAGE ================== */
@@ -1035,11 +1096,13 @@ const SPECIAL = {
   'bq-bo': 'Bonaire', 'bq-sa': 'Saba', 'bq-se': 'Sint Eustatius', 'eu': 'European Union',
   'xa': 'Abkhazia', 'xc': 'Northern Cyprus', 'xo': 'South Ossetia', 'xk': 'Kosovo'
 };
+// other names people search for (comma separated)
 const ALIASES = {
-  tr: 'turkey turkiye', cz: 'czech republic czechia', ci: 'ivory coast', mm: 'burma', mk: 'macedonia', sz: 'swaziland eswatini',
-  cv: 'cape verde', us: 'usa america united states', gb: 'uk britain england', ae: 'uae emirates', kr: 'korea', kp: 'north korea dprk',
-  ru: 'russia', cd: 'congo drc', cg: 'congo', va: 'vatican holy see', ps: 'palestine', tw: 'taiwan roc', cn: 'china prc',
-  nl: 'holland netherlands', de: 'germany', jp: 'japan nippon', ir: 'iran persia', tl: 'east timor', fm: 'micronesia', xc: 'kktc trnc'
+  tr: 'turkey,turkiye', cz: 'czech republic,czechia', ci: 'ivory coast', mm: 'burma', mk: 'macedonia', sz: 'swaziland,eswatini',
+  cv: 'cape verde', us: 'usa,america,united states', gb: 'uk,britain,great britain', ae: 'uae,emirates', kr: 'korea,south korea', kp: 'north korea,dprk',
+  ru: 'russia', cd: 'dr congo,drc', cg: 'congo', va: 'vatican,holy see', ps: 'palestine', tw: 'taiwan,roc', cn: 'china,prc',
+  nl: 'holland,netherlands', de: 'germany', jp: 'japan,nippon', ir: 'iran,persia', tl: 'east timor', fm: 'micronesia', xc: 'kktc,trnc',
+  'gb-eng': 'england', 'gb-sct': 'scotland', 'gb-wls': 'wales', eu: 'eu,europe'
 };
 let countries = [];
 const urlCache = {};
@@ -1284,40 +1347,139 @@ async function doExport(how) {
 }
 
 /* ================== HELPER BOT ("Bally") ==================
-   Works offline: it matches your question to known answers. No data leaves the page. */
+   Works offline, nothing leaves the page. Bally does two things:
+   1) answers "how do I…" questions (BOT list below)
+   2) understands requests like "japan with angry eyes and a crown" and does them. */
 const BOT = [
-  { k: /\bhello|\bhi\b|\bhey\b|merhaba|selam|\bsa\b/, en: 'Hi! I can explain anything on this page. Ask me something like "how do I add a hat?"', tr: 'Merhaba! Bu sayfadaki her şeyi anlatabilirim. "Şapka nasıl eklenir?" gibi bir şey sor.' },
-  { k: /what.*countryball|countryball (is|nedir)|nedir|polandball/, en: 'Countryballs are round characters painted with a country\'s flag. They come from Polandball comics, where countries act out history and jokes.', tr: 'Countryball\'lar ülke bayrağıyla boyanmış yuvarlak karakterlerdir. Ülkelerin tarih ve şakaları canlandırdığı Polandball çizgi romanlarından çıktı.' },
-  { k: /delete|remove|\bsil(\b|er|me|in|ey)|kaldır/, en: 'Select the item on the picture and press 🗑 Delete in the bar under it (or the Delete key). To remove the flag: Flag options → Remove flag.', tr: 'Öğeyi seç ve altındaki çubuktan 🗑 Delete\'e bas (ya da Delete tuşu). Bayrağı kaldırmak için: Flag options → Remove flag.' },
-  { k: /upside|poland|reverse|flip.*flag|ters|polonya|baş aşağı/, en: 'Open the Flag tab → "Flag options" → Upside down. That\'s the classic Polandball look. "Mirror" flips it left-right.', tr: 'Flag sekmesi → "Flag options" → Upside down. Klasik Polandball görünümü budur. "Mirror" sağ-sol çevirir.', act: ['flagmore', 'Show flag options', 'Bayrak ayarlarını aç'] },
-  { k: /\bown\b|upload|my (image|flag|picture)|custom|kendi|yükle|resim/, en: 'Open "Flag options" in the Flag tab and press "Use my own image". Any picture works.', tr: 'Flag sekmesinde "Flag options" → "Use my own image". Herhangi bir resim olur.', act: ['flagmore', 'Show flag options', 'Bayrak ayarlarını aç'] },
-  { k: /eye|face|göz|surat|yüz|ifade/, en: 'Open the Eyes tab and tap any eyes. They land on the face; drag them on the picture to move.', tr: 'Eyes sekmesini aç ve bir göze dokun. Yüze yerleşir, resmin üstünde sürükleyerek taşı.', act: ['eyes', 'Open Eyes tab', 'Eyes sekmesini aç'] },
-  { k: /\bhats?\b|crown|fez|şapka|taç|fes|kask/, en: 'Add-ons tab → Hats. Tap one and it sits on top of the head. Drag to adjust.', tr: 'Add-ons sekmesi → Hats. Birine dokun, kafanın üstüne oturur. Sürükleyip ayarla.', act: ['addons', 'Open Add-ons', 'Add-ons aç'] },
-  { k: /text|speech|bubble|say|write|word|yazı|balon|konuş|söyle/, en: 'Add-ons tab → Speech bubble or Text. Then type in the box under the picture. Press Enter for a new line.', tr: 'Add-ons sekmesi → Speech bubble veya Text. Sonra resmin altındaki kutuya yaz. Enter yeni satır açar.', act: ['addons', 'Open Add-ons', 'Add-ons aç'] },
-  { k: /\bmove|drag|resize|bigger|smaller|size|rotate|turn|taşı|sürükle|büyüt|küçült|döndür|boyut/, en: 'Tap a sticker on the picture to select it. Drag to move, the corner dot resizes, the top dot turns it. The bar under the picture has + and − too.', tr: 'Resimdeki öğeye dokunup seç. Sürükleyerek taşı, köşedeki nokta büyütür, üstteki nokta döndürür. Resmin altındaki çubukta + ve − de var.' },
-  { k: /background|sky|night|arka ?plan|gökyüzü|gece/, en: 'Style tab → Background. "None" means a transparent PNG.', tr: 'Style sekmesi → Background. "None" şeffaf PNG demek.', act: ['style', 'Open Style tab', 'Style sekmesini aç'] },
-  { k: /shape|cube|triangle|brick|square|şekil|küp|üçgen|tuğla|kare/, en: 'Use the shape buttons under the picture: Ball, Cube, Triangle, Brick. Eyes and hats move with it.', tr: 'Resmin altındaki şekil düğmelerini kullan: Ball, Cube, Triangle, Brick. Göz ve şapkalar da birlikte kayar.' },
-  { k: /draw|paint|pencil|color|colour|brush|çiz|boya|kalem|renk|fırça/, en: 'Open the Draw tab, pick Pencil, a color and a size, then draw on the picture. "Stay inside the shape" keeps lines clean.', tr: 'Draw sekmesini aç, Pencil, renk ve boyut seç, resmin üstüne çiz. "Stay inside the shape" çizgileri şeklin içinde tutar.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
-  { k: /fill|bucket|doldur|kova/, en: 'Draw tab → Fill, pick a color, then tap an area. If it fills too much or too little, change "Fill settings".', tr: 'Draw → Fill, renk seç, bir alana dokun. Çok ya da az dolduruyorsa "Fill settings" ayarını değiştir.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
-  { k: /erase|rubber|sil.*çiz|silgi/, en: 'Draw tab → Eraser. It only removes your drawing, not the flag.', tr: 'Draw → Eraser. Sadece çizimini siler, bayrağı silmez.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
-  { k: /outline|border|shine|shadow|3d|kenar|çizgi kalın|parla|gölge/, en: 'Style tab: the Outline slider changes the black border, "Shine & shadow" adds a 3D look.', tr: 'Style sekmesi: Outline kaydırıcısı siyah kenarı değiştirir, "Shine & shadow" 3D görünüm verir.', act: ['style', 'Open Style tab', 'Style sekmesini aç'] },
-  { k: /download|save|png|export|share|copy|indir|kaydet|paylaş|kopyala/, en: 'Press the red Download button at the top. You can pick the size (up to 2400px) and a transparent or white background. On phones you can share it directly.', tr: 'Üstteki kırmızı Download düğmesine bas. Boyutu (2400px\'e kadar) ve şeffaf/beyaz arka planı seçebilirsin. Telefonda direkt paylaşabilirsin.', act: ['export', 'Open Download', 'İndirmeyi aç'] },
-  { k: /undo|mistake|back|geri|hata/, en: 'Use ↶ at the top (or Ctrl+Z). ↷ brings it back (Ctrl+Y).', tr: 'Üstteki ↶ düğmesi (veya Ctrl+Z). ↷ geri getirir (Ctrl+Y).' },
-  { k: /random|dice|surprise|rastgele|zar/, en: 'Press 🎲 Random at the top for a surprise countryball. Press again for another.', tr: 'Üstteki 🎲 Random\'a bas, rastgele bir countryball çıkar. Tekrar bas, başkası gelsin.' },
-  { k: /lost|saved|autosave|kayboldu|kaydol|otomatik/, en: 'Your work saves itself on this device. Close the page and it\'s still here when you come back.', tr: 'Çalışman bu cihazda kendiliğinden kaydolur. Sayfayı kapatıp açınca yerinde durur.' },
-  { k: /\bapp\b|install|offline|phone|uygulama|yükle|çevrimdışı|telefon/, en: 'In your browser menu choose "Install app" or "Add to Home screen". After that it works without internet.', tr: 'Tarayıcı menüsünden "Uygulamayı yükle" ya da "Ana ekrana ekle"yi seç. Sonra internetsiz de çalışır.' },
-  { k: /start|begin|how.*(make|create)|first|nasıl yap|nereden başla|başla|countryball yap/, en: 'Making a countryball takes 3 steps:\n1. Flag tab: tap a country.\n2. Eyes tab: tap a pair of eyes.\n3. Press Download.\nHats, text and drawing are optional extras.', tr: '3 adımda countryball:\n1. Flag sekmesi: bir ülkeye dokun.\n2. Eyes sekmesi: bir göz seç.\n3. Download\'a bas.\nŞapka, yazı ve çizim isteğe bağlı.', act: ['flag', 'Open Flag tab', 'Flag sekmesini aç'] },
-  { k: /find|search|country|flag|bayrak|ülke|ara/, en: 'Go to the Flag tab and type the country name in English, e.g. "Germany". Tap it and it goes on right away. Recently used flags show at the top.', tr: 'Flag sekmesine git, ülkenin İngilizce adını yaz (ör. "Germany"). Dokununca hemen uygulanır. Son kullandıkların üstte çıkar.', act: ['flag', 'Open Flag tab', 'Flag sekmesini aç'] },
-  { k: /free|price|cost|ücret|bedava|para/, en: 'Yes, it\'s completely free. No sign-up.', tr: 'Evet, tamamen ücretsiz. Üyelik yok.' },
-  { k: /thank|thx|teşekkür|sağ ?ol|eyv/, en: 'Happy to help! Have fun 🎉', tr: 'Ne demek! İyi eğlenceler 🎉' },
+  { k: /\bhello|\bhi\b|\bhey\b|\byo\b|merhaba|selam/, a: 'Hi! Ask me how anything works, or just tell me what to make, like "Brazil with happy eyes and a top hat".' },
+  { k: /who are you|your name|what are you/, a: 'I\'m Bally, the helper of Countryball Studio. I explain things and I can build countryballs for you. Try "Poland upside down with sad eyes".' },
+  { k: /who made|creator|author|developer/, a: 'Countryball Studio is made by inançX.' },
+  { k: /what.*countryball|countryball (is|nedir)|polandball/, a: 'Countryballs are round characters painted with a country\'s flag. They come from Polandball comics, where countries act out history and jokes.' },
+  { k: /delete|remove|\bsil(\b|er|me|in|ey)|kaldır/, a: 'Tap the item on the picture to select it, then press 🗑 Delete in the bar under the picture (or the Delete key). To remove the flag: Flag options → Remove flag.\nYou can also tell me: "remove the hat".' },
+  { k: /upside|reverse|flip.*flag|ters|baş aşağı/, a: 'Flag tab → "Flag options" → Upside down. That\'s the classic Polandball look. "Mirror" flips it left to right.\nOr tell me: "upside down".', act: ['flagmore', 'Show flag options'] },
+  { k: /\bown\b|upload|my (image|flag|picture)|custom|kendi|resim/, a: 'Open "Flag options" in the Flag tab and press "Use my own image". Any picture works.', act: ['flagmore', 'Show flag options'] },
+  { k: /eye|face|göz|ifade|expression|emotion|feeling/, a: 'Open the Eyes tab and tap a feeling: angry, sad, smug, scared and more. They land on the face, drag them to move.\nOr tell me: "angry eyes".', act: ['eyes', 'Open Eyes tab'] },
+  { k: /\bhats?\b|crown|şapka|taç|kask/, a: 'Add-ons tab → Hats. Tap one and it sits on top of the head.\nOr tell me: "add a crown".', act: ['addons', 'Open Add-ons'] },
+  { k: /text|speech|bubble|write|word|yazı|balon|konuş/, a: 'Add-ons tab → Speech bubble or Text. Then type in the box under the picture.\nOr tell me: say "hello world".', act: ['addons', 'Open Add-ons'] },
+  { k: /\bmove|drag|resize|bigger|smaller|size|rotate|turn|taşı|büyüt|küçült|döndür/, a: 'Tap an item on the picture to select it. Drag to move it, the corner dot resizes, the top dot turns it. The bar under the picture also has + and −.' },
+  { k: /background|sky|night|arka ?plan/, a: 'Style tab → Background. "None" gives a transparent PNG.\nOr tell me: "night background".', act: ['style', 'Open Style tab'] },
+  { k: /shape|cube|triangle|brick|square|şekil|küp|üçgen/, a: 'Use the buttons under the picture: Ball, Cube, Triangle, Brick. Eyes and hats move along.\nOr tell me: "make it a cube".' },
+  { k: /fill|bucket|doldur|kova/, a: 'Draw tab → Fill, pick a color, then tap an area. If it fills too much or too little, change "Fill settings".', act: ['draw', 'Open Draw tab'] },
+  { k: /erase|eraser|rubber|silgi/, a: 'Draw tab → Eraser. It only removes your drawing, never the flag.', act: ['draw', 'Open Draw tab'] },
+  { k: /draw|paint|pencil|colou?r|brush|çiz|boya|kalem|renk/, a: 'Open the Draw tab, pick Pencil, a color and a size, then draw on the picture. "Stay inside the shape" keeps lines clean.', act: ['draw', 'Open Draw tab'] },
+  { k: /outline|border|shine|shadow|3d|kenar|gölge/, a: 'Style tab: the Outline slider changes the black border, "Shine & shadow" adds a 3D look.', act: ['style', 'Open Style tab'] },
+  { k: /download|save|png|export|share|copy|indir|kaydet|paylaş/, a: 'Press the red Download button at the top. Pick a size (up to 2400px) and a transparent or white background. On phones you can share it directly.', act: ['export', 'Open Download'] },
+  { k: /undo|mistake|go back|geri al|hata/, a: 'Press ↶ at the top (or Ctrl+Z). ↷ brings it back (Ctrl+Y).' },
+  { k: /lost|autosave|kayboldu/, a: 'Your work saves itself on this device. Close the page and it\'s still here when you come back.' },
+  { k: /\bapp\b|install|offline|uygulama|çevrimdışı/, a: 'In your browser menu choose "Install app" or "Add to Home screen". After that it works without internet.' },
+  { k: /free|price|cost|ücret|bedava/, a: 'Yes, it\'s completely free. No sign-up.' },
+  { k: /start|begin|how.*(make|create)|nasıl|başla/, a: 'Three steps:\n1. Flag tab: tap a country.\n2. Eyes tab: tap a feeling.\n3. Press Download.\nOr just tell me, like "Germany with smug eyes and a beret".', act: ['flag', 'Open Flag tab'] },
+  { k: /find|search|country|flag|bayrak|ülke/, a: 'Go to the Flag tab and type the country name in English, e.g. "Germany". Tap it and it goes on right away.\nOr tell me the country and I\'ll put it on.', act: ['flag', 'Open Flag tab'] },
+  { k: /love (this|it)|awesome|amazing|\bcool\b|\bnice\b|great|güzel|harika/, a: 'Glad you like it! 😊 Tell me what to make next, or press 🎲 Random for a surprise.' },
+  { k: /thank|thx|teşekkür|sağ ?ol/, a: 'Happy to help! Have fun 🎉' },
+  { k: /\bhelp\b|yardım/, a: 'Sure! Ask me how something works, or tell me what to make. For example "Japan with a crown", "make it a triangle", "night background" or "remove the eyes".' },
 ];
-const QUICK = { en: ['How do I start?', 'Upside-down flag', 'Add a hat', 'Speech bubble', 'Download'], tr: ['Nasıl başlarım?', 'Ters bayrak', 'Şapka ekle', 'Konuşma balonu', 'İndir'] };
-let botLang = /^tr\b/i.test(navigator.language || '') ? 'tr' : 'en', botStarted = false;
-const isTr = t => /[çğışöüÇĞİŞÖÜ]|\b(nasıl|nedir|ne|nerede|neden|bayrak|şapka|yazı|göz|ekle|yap|var mı|mı|mi)\b/i.test(t);
+// words Bally understands for each item
+const WORDS = {
+  classic: 'normal,plain,classic,normal eyes', happy: 'happy,smiling,smile,glad', angry: 'angry,mad', furious: 'furious,rage,raging',
+  sad: 'sad,upset', crying: 'crying,cry,tears,weeping', lined: 'unamused,bored,annoyed,meh', smug: 'smug,proud',
+  squint: 'suspicious,sus', side: 'side eye,side-eye,sideeye', surprised: 'surprised,shocked,wow eyes', scared: 'scared,afraid,terrified,frightened',
+  determined: 'determined,serious,focused', laughing: 'laughing,lol,xd', wink: 'wink,winking', sleepy: 'sleepy,sleeping,asleep',
+  tired: 'tired,exhausted', love: 'in love,heart eyes,hearts,loving', stars: 'starstruck,star eyes,stars', dead: 'dead,x eyes', derp: 'derp,crazy,silly,goofy',
+  tophat: 'top hat,tophat', crown: 'crown,king,queen', fez: 'fez', ushanka: 'ushanka,fur hat,russian hat', beret: 'beret', cap: 'cap,baseball cap',
+  viking: 'viking,viking helmet,horns', party: 'party hat', sunglasses: 'shades,sunglasses', mustache: 'mustache,moustache', monocle: 'monocle',
+  bowtie: 'bow tie,bowtie', pipe: 'pipe', tear: 'tear,a tear', sweat: 'sweat,sweating,nervous', anger: 'anger mark,vein', blush: 'blush,blushing,shy',
+};
+const SHAPE_WORDS = { ball: 'ball,sphere,round', cube: 'cube,square,box', tri: 'triangle,tringapore', brick: 'brick,rectangle,reichtangle' };
+const BG_WORDS = { sky: 'sky,blue sky,sky background', night: 'night,night sky', grass: 'meadow,grass,field', white: 'white background', none: 'transparent,no background' };
+const QUICK = ['How do I start?', 'Japan with a crown', 'Make a random one', 'Upside-down flag', 'Download'];
+
+const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const has = (t, phrase) => new RegExp('(^|[^a-z0-9])' + esc(phrase) + '($|[^a-z0-9])').test(t);
+function findBest(t, table) { // table: [[id, 'a,b,c']] → id of the longest phrase found in t
+  let best = null, len = 0;
+  for (const [id, list] of table) for (const ph of list.split(',')) { const p = ph.trim(); if (p && p.length > len && has(t, p)) { best = id; len = p.length; } }
+  return best;
+}
+function findAll(t, table) {
+  const out = [];
+  for (const [id, list] of table) if (list.split(',').some(p => has(t, p.trim()))) out.push(id);
+  return out;
+}
+function findCountry(t) {
+  let best = null, score = 0;
+  for (const c of countries) {
+    const names = [[norm(c.name).replace(/ - .*/, ''), .5], [norm(c.name), .6], ...(ALIASES[c.code] || '').split(',').filter(Boolean).map(a => [a, 0])];
+    for (const [n, bonus] of names) if (n.length > 2 && n.length + bonus > score && has(t, n)) { best = c; score = n.length + bonus; }
+  }
+  return best;
+}
+function removeGroup(group) { const n = state.stickers.length; state.stickers = state.stickers.filter(s => STICKERS[s.type].group !== group); return n - state.stickers.length; }
+
+async function botCommand(raw) {
+  // quoted text is for the speech bubble, so don't read commands inside it
+  const t = norm(raw.replace(/["“”][^"“”]*["“”]/g, ' ').toLowerCase());
+  const done = [];
+  const removing = /\b(remove|delete|without|take off|get rid of|no more|clear the)\b/.test(t);
+
+  if (/\b(start over|reset everything|clear everything|new one|blank)\b/.test(t)) { resetAll(); return ['Cleared everything']; }
+  if (/\b(random|surprise me|anything|whatever)\b/.test(t) && !findCountry(t)) { await randomBall(); return ['Made a random countryball: ' + state.flag.name]; }
+
+  const stickerIds = findAll(t, Object.entries(WORDS));
+  if (removing) {
+    let n = 0;
+    if (/\beyes?\b/.test(t)) { n += removeGroup('eye'); }
+    if (/\bhats?\b/.test(t)) { n += removeGroup('hat'); }
+    if (/\b(text|bubble|speech)\b/.test(t)) { n += removeGroup('text'); }
+    if (/\bflag\b/.test(t) && state.flag.img) { removeFlag(); done.push('Removed the flag'); }
+    if (/\b(everything|all stickers|all)\b/.test(t)) { n += state.stickers.length; state.stickers = []; }
+    stickerIds.forEach(id => { const before = state.stickers.length; state.stickers = state.stickers.filter(s => s.type !== id); n += before - state.stickers.length; });
+    state.sel = -1;
+    if (n) done.push(`Removed ${n} item${n > 1 ? 's' : ''}`);
+    if (done.length) { pushHistory(); syncUI(); render(); }
+    return done;
+  }
+
+  const country = findCountry(t);
+  if (country) { await applyFlag(country, true); done.push(country.name + ' flag'); }
+
+  const shape = findBest(t, Object.entries(SHAPE_WORDS));
+  if (shape && shape !== state.shape && !(shape === 'ball' && !/\b(ball|sphere)\b/.test(t))) { setShape(shape, true); done.push(SHAPES[shape].name + ' shape'); }
+
+  if (/upside[ -]?down|flipped|polandball/.test(t) && state.flag.img) { state.flag.fy = true; done.push('upside down'); }
+  if (/\bmirror(ed)?\b/.test(t) && state.flag.img) { state.flag.fx = !state.flag.fx; done.push('mirrored'); }
+
+  const eyeId = stickerIds.find(id => STICKERS[id].group === 'eye')
+    || (/\beyes\b/.test(t) && !state.stickers.some(s => STICKERS[s.type].group === 'eye') ? 'classic' : null);
+  if (eyeId) { removeGroup('eye'); state.stickers.push(placeFor(eyeId)); done.push(STICKERS[eyeId].name + ' eyes'); }
+  const hatId = stickerIds.find(id => STICKERS[id].group === 'hat');
+  if (hatId) { removeGroup('hat'); state.stickers.push(placeFor(hatId)); done.push(STICKERS[hatId].name); }
+  stickerIds.filter(id => STICKERS[id].group === 'acc').forEach(id => {
+    if (!state.stickers.some(s => s.type === id)) state.stickers.push(placeFor(id));
+    done.push(STICKERS[id].name);
+  });
+
+  const quoted = raw.match(/["“”]([^"“”]{1,80})["“”]/) || raw.match(/\b(?:says?|saying)\s*:?\s+(.{1,80})$/i);
+  if (quoted) {
+    const f = SH().face;
+    state.stickers = state.stickers.filter(s => s.type !== 'bubble');
+    state.stickers.push({ type: 'bubble', text: quoted[1].trim(), x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: .9, rot: 0, flip: false });
+    done.push(`a speech bubble saying "${quoted[1].trim()}"`);
+  }
+
+  const bg = findBest(t, Object.entries(BG_WORDS));
+  if (bg && (/\b(background|bg)\b/.test(t) || ['night', 'none', 'grass'].includes(bg))) { state.bg = { ...state.bg, type: bg }; done.push(BGS[bg].name + ' background'); }
+  if (/\b(shine|shiny|shadow|3d)\b/.test(t)) { state.shading = !/\bno (shine|shadow)\b/.test(t); done.push(state.shading ? 'shine & shadow' : 'no shine'); }
+
+  if (done.length) { state.sel = -1; pushHistory(); syncUI(); render(); }
+  return done;
+}
+
+const botQ = /^(how|what|where|why|can i|could i|is|are|do|does|which|when|who)\b|\?\s*$/;
 function botSay(text, cls, act) {
   const m = document.createElement('div'); m.className = 'msg ' + cls; m.textContent = text;
   if (act) {
-    const b = document.createElement('button'); b.className = 'btn small act'; b.textContent = act[botLang === 'tr' ? 2 : 1];
+    const b = document.createElement('button'); b.className = 'btn small act'; b.textContent = act[1];
     b.onclick = () => doBotAction(act[0]); m.appendChild(b);
   }
   $('botMsgs').appendChild(m); $('botMsgs').scrollTop = 1e9;
@@ -1330,27 +1492,33 @@ function doBotAction(a) {
 }
 function botQuick() {
   $('botQuick').innerHTML = '';
-  QUICK[botLang].forEach(q => { const b = document.createElement('button'); b.textContent = q; b.onclick = () => botAsk(q); $('botQuick').appendChild(b); });
+  QUICK.forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => botAsk(q); $('botQuick').appendChild(b); });
 }
-function botAsk(q) {
+async function botAsk(q) {
   q = q.trim(); if (!q) return;
   botSay(q, 'u');
-  botLang = isTr(q) ? 'tr' : (/[a-z]/i.test(q) ? 'en' : botLang);
   const t = q.toLowerCase();
-  const hit = BOT.find(e => e.k.test(t));
-  setTimeout(() => {
-    if (hit) botSay(hit[botLang], 'b', hit.act);
-    else botSay(botLang === 'tr' ? 'Bunu bilmiyorum ama şunları anlatabilirim: bayrak, göz, şapka, yazı, çizim, arka plan, indirme. Aşağıdaki düğmelere de bakabilirsin.' : 'I don\'t know that one yet. I can help with flags, eyes, hats, text, drawing, backgrounds and downloading. Try the buttons below.', 'b');
-    botQuick();
-  }, 250);
+  const faq = BOT.find(e => e.k.test(t));
+  let reply = null, act = null;
+  if (botQ.test(t) && faq) { reply = faq.a; act = faq.act; }
+  else {
+    const done = await botCommand(q);
+    if (done.length) {
+      reply = 'Done! ' + done.join(', ') + ' ✔';
+      if (innerWidth < 1000) { setTimeout(() => { closeBot(); scrollTo({ top: 0, behavior: 'smooth' }); toast(reply); }, 700); }
+    } else if (faq) { reply = faq.a; act = faq.act; }
+  }
+  if (!reply) reply = 'I didn\'t get that one. You can ask how something works, or tell me what to make, like "Brazil with happy eyes and a top hat", "make it a cube" or "night background".';
+  setTimeout(() => { botSay(reply, 'b', act); }, 200);
 }
+let botStarted = false;
 function openBot() {
   $('bot').hidden = false; $('botBtn').hidden = true;
-  if (!botStarted) { botStarted = true; botSay(botLang === 'tr' ? 'Selam, ben Bally 👋 Countryball yapmakla ilgili ne sorarsan anlatırım.' : 'Hi, I\'m Bally 👋 Ask me anything about making your countryball.', 'b'); botQuick(); }
+  if (!botStarted) { botStarted = true; botSay('Hi, I\'m Bally 👋 Ask me how anything works, or just tell me what to make, like "Turkey with angry eyes and a fez".', 'b'); botQuick(); }
   if (innerWidth > 560) $('botIn').focus();
 }
 function closeBot() { $('bot').hidden = true; $('botBtn').hidden = false; }
-$('botForm').onsubmit = e => { e.preventDefault(); botAsk($('botIn').value); $('botIn').value = ''; };
+$('botForm').onsubmit = e => { e.preventDefault(); const v = $('botIn').value; $('botIn').value = ''; botAsk(v); };
 // Bally's face: a little Polandball
 function drawBotFaces() {
   document.querySelectorAll('canvas.face').forEach(c => {
@@ -1360,7 +1528,7 @@ function drawBotFaces() {
     g.fillStyle = '#fff'; g.fillRect(0, 0, s, s / 2); g.fillStyle = '#e3242b'; g.fillRect(0, s / 2, s, s / 2);
     g.restore();
     g.beginPath(); g.arc(s / 2, s / 2, r, 0, 7); g.lineWidth = s / 18; g.strokeStyle = '#1b1d24'; g.stroke();
-    for (const x of [s * .34, s * .64]) { g.beginPath(); g.ellipse(x, s * .42, s * .1, s * .12, 0, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = s / 24; g.stroke(); }
+    for (const x of [s * .35, s * .63]) { g.beginPath(); g.ellipse(x, s * .42, s * .085, s * .11, 0, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = s / 26; g.stroke(); }
   });
 }
 
@@ -1380,7 +1548,7 @@ document.addEventListener('keydown', e => {
 function setupAd() {
   const wrap = $('adWrap'), slot = $('adSlot');
   if (!ADS.show) { wrap.hidden = true; return; }
-  wrap.hidden = false;
+  wrap.hidden = false; document.querySelector('.app').classList.add('has-ad');
   if (ADS.html) {
     slot.classList.remove('empty');
     const range = document.createRange(); range.selectNode(slot);
