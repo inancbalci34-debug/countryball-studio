@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#171a22">
+<meta name="theme-color" content="#f2f5fa">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Countryball">
 <title>Countryball Maker – Make Your Own Countryball Online | Countryball Studio</title>
 <meta name="description" content="Free online countryball maker. Pick from 265 real flags, choose a ball, cube or triangle shape, add eyes, hats and speech bubbles, then download a PNG. Works on phone and PC.">
@@ -20,277 +20,307 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebApplication","name":"Countryball Studio","url":"https://inancbalci34-debug.github.io/countryball-studio/","applicationCategory":"DesignApplication","operatingSystem":"Any","description":"Free online countryball maker with 265 real flags, shapes, eyes, hats and speech bubbles.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","name":"inançX"}}
 </script>
 <style>
 :root{
-  --bg:#13151b; --panel:#1c1f28; --panel2:#252935; --line:#323746;
-  --text:#eef0f6; --muted:#9aa1b4; --accent:#ffcc33; --accent-ink:#1a1400; --red:#e63946;
+  --page:#f2f5fa; --card:#ffffff; --soft:#f5f7fb; --line:#dde3ec;
+  --ink:#1b1d24; --muted:#687083; --red:#e3242b; --red-ink:#fff; --sun:#ffd23f; --blue:#2457e6;
+  --r:14px;
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Baloo 2",system-ui,sans-serif}
-html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
-button,input,select,textarea{font-family:inherit}
-header{height:60px;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line);background:#171a22;position:sticky;top:0;z-index:5}
-header{padding-top:env(safe-area-inset-top);height:calc(60px + env(safe-area-inset-top))}
-.logo{width:34px;height:34px;border-radius:50%;border:3px solid #111;background:linear-gradient(#fff 50%,#dc143c 50%);position:relative;flex:none}
-.logo::before,.logo::after{content:"";position:absolute;top:9px;width:7px;height:8px;background:#fff;border:2px solid #111;border-radius:50%}
+html,body{margin:0;background:var(--page);color:var(--ink);font-family:"Baloo 2",system-ui,sans-serif;font-size:16px}
+body{overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* ---------- header ---------- */
+header{position:sticky;top:0;z-index:10;background:var(--page);display:flex;align-items:center;gap:10px;
+  padding:calc(10px + env(safe-area-inset-top)) 18px 10px}
+.logo{width:36px;height:36px;border-radius:50%;border:3px solid var(--ink);background:linear-gradient(#fff 50%,var(--red) 50%);position:relative;flex:none}
+.logo::before,.logo::after{content:"";position:absolute;top:9px;width:8px;height:9px;background:#fff;border:2px solid var(--ink);border-radius:50%}
 .logo::before{left:6px}.logo::after{right:6px}
-header h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowrap}
-header h1 span{color:var(--accent)}
+header h1{font-size:21px;margin:0;font-weight:800;line-height:1;white-space:nowrap}
 .spacer{flex:1}
-.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:7px 12px;border-radius:10px;cursor:pointer;font-weight:700;font-size:14px;transition:.15s;display:inline-flex;align-items:center;gap:6px;justify-content:center}
-.btn:hover{border-color:#4a5166;background:#2d3240}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.btn.primary:hover{filter:brightness(1.07)}
-.btn.danger{color:#ff8a93}
-.app{display:grid;grid-template-columns:260px minmax(0,1fr) 340px;gap:14px;padding:14px;height:calc(100vh - 60px)}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;overflow:auto}
-.panel h3{margin:4px 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:700}
-.sec{margin-bottom:16px}
-.tools{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
-.tool{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:8px 4px;cursor:pointer;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:2px}
-.tool .ic{font-size:20px;line-height:1}
-.tool.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.tool:hover:not(.active){border-color:#4a5166}
-.shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
-.shape{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:12px;padding:7px 2px 4px;cursor:pointer;font-size:11.5px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px}
-.shape svg{width:30px;height:30px}
-.shape.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:4px 10px;cursor:pointer;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:6px}
-.chip.on{border-color:var(--accent);color:var(--accent)}
-.chip i{width:14px;height:14px;border-radius:50%;display:inline-block;border:1px solid #0008}
-.row{display:flex;align-items:center;gap:8px}
-input[type=range]{width:100%;accent-color:var(--accent)}
-input[type=color]{width:44px;height:36px;border:none;background:none;padding:0;cursor:pointer}
-.swatches{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.sw{width:24px;height:24px;border-radius:50%;border:2px solid #0006;cursor:pointer}
-.sw.on{outline:2px solid var(--accent);outline-offset:2px}
-.val{min-width:34px;text-align:right;color:var(--muted);font-size:13px}
-label.chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer;margin-top:4px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0;min-height:0}
-.canvas-wrap{width:min(100%,calc(100vh - 140px));aspect-ratio:1;border-radius:18px;border:1px solid var(--line);
-  background-color:#e9ebf0;background-image:linear-gradient(45deg,#d6d9e0 25%,transparent 25%),linear-gradient(-45deg,#d6d9e0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#d6d9e0 75%),linear-gradient(-45deg,transparent 75%,#d6d9e0 75%);
-  background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0;overflow:hidden;box-shadow:0 10px 40px #0007}
+
+/* buttons: thick ink outline like a countryball */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:2px solid var(--ink);background:#fff;border-radius:12px;
+  padding:6px 13px;font-weight:700;font-size:15px;line-height:1.2;box-shadow:0 3px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--ink)}
+.btn:disabled{opacity:.35;cursor:default;transform:none;box-shadow:0 3px 0 var(--ink)}
+.btn.main{background:var(--red);color:var(--red-ink)}
+.btn.icon{width:40px;padding:6px 0}
+.btn.small{font-size:14px;padding:4px 10px;border-radius:10px}
+.btn.quiet{border-color:var(--line);box-shadow:none;background:var(--soft)}
+.btn.quiet:active{transform:none}
+.btn.warn{color:var(--red)}
+
+/* ---------- layout ---------- */
+.app{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;padding:4px 18px 18px;max-width:1400px;margin:0 auto;height:calc(100vh - 62px)}
+.stage{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:0;min-width:0}
+.canvas-wrap{position:relative;width:min(100%,calc(100vh - 220px));aspect-ratio:1;flex:none;border-radius:22px;border:2px solid var(--ink);
+  background-color:#fff;background-image:linear-gradient(45deg,#eef1f6 25%,transparent 25%),linear-gradient(-45deg,#eef1f6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eef1f6 75%),linear-gradient(-45deg,transparent 75%,#eef1f6 75%);
+  background-size:26px 26px;background-position:0 0,0 13px,13px -13px,-13px 0;overflow:hidden;box-shadow:0 5px 0 var(--ink)}
 canvas#cv{width:100%;height:100%;display:block;touch-action:none}
-.status{font-size:13px;color:var(--muted);text-align:center}
-.status b{color:var(--text)}
-.tabs{display:flex;gap:6px;margin-bottom:12px;flex:none}
-.tab{flex:1;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);cursor:pointer;font-weight:700}
-.tab.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
-.side{display:flex;flex-direction:column}
-.tabpage{display:none;flex-direction:column;min-height:0;flex:1}
-.tabpage.on{display:flex}
-#tab-stickers{overflow:auto}
-.search{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:15px}
-.picked{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;margin:10px 0}
-.picked img,.picked .ph{width:54px;height:36px;object-fit:cover;border-radius:4px;background:#333;flex:none}
-.picked .nm{font-weight:700;line-height:1.1;flex:1;font-size:14px}
-.picked .nm small{display:block;color:var(--muted);font-weight:500}
-details.opts{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:10px}
-details.opts summary{cursor:pointer;font-weight:700;font-size:14px}
-.opt{display:grid;grid-template-columns:62px 1fr 44px;align-items:center;gap:6px;font-size:13px;margin-top:6px}
-select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px}
-.recent{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:6px}
+.empty-hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;color:var(--muted);font-weight:700;font-size:18px;line-height:1.3}
+.empty-hint b{display:block;color:var(--ink);font-size:24px}
+.empty-hint .narrow{display:none}
+
+.shape-row{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:4px}
+.shape{display:flex;align-items:center;gap:6px;border:0;background:none;border-radius:999px;padding:5px 12px 5px 8px;font-weight:700;font-size:15px;color:var(--muted)}
+.shape svg{width:22px;height:22px}
+.shape.on{background:var(--ink);color:#fff}
+.shape.on svg g:first-child{stroke:#fff}
+
+.selbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:8px 10px;max-width:100%}
+.selbar .nm{font-weight:800}
+.selbar textarea{width:220px;height:42px;border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:15px;resize:none;background:var(--soft)}
+.selbar input[type=color]{width:34px;height:34px;padding:0;border:0;background:none}
+.tip{font-size:14px;color:var(--muted);text-align:center;max-width:560px}
+
+/* ---------- side panel ---------- */
+.side{background:var(--card);border:1px solid var(--line);border-radius:22px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:8px;border-bottom:1px solid var(--line);flex:none}
+.tab{border:0;background:none;border-radius:12px;padding:6px 2px 4px;font-weight:700;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:1px}
+.tab .ic{font-size:21px;line-height:1.1}
+.tab.on{background:var(--sun);color:var(--ink)}
+.page{display:none;flex-direction:column;gap:12px;padding:14px;overflow:auto;flex:1;min-height:0}
+.page.on{display:flex}
+.page h2{font-size:17px;margin:2px 0 -4px;font-weight:800}
+.page p.help{margin:-6px 0 0;color:var(--muted);font-size:14px;line-height:1.35}
+
+.search{width:100%;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--soft);font-size:16px}
+.search:focus{border-color:var(--ink);outline:none;background:#fff}
+.recent{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .recent:empty{display:none}
-.recent button{flex:none;border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:4px;cursor:pointer}
-.recent img{width:38px;height:26px;object-fit:contain;display:block}
-.flag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:7px;overflow:auto;flex:1;min-height:220px;padding-right:2px;align-content:start}
-.fi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text)}
-.fi:hover{border-color:#566}
-.fi.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
-.fi img{width:60px;height:40px;object-fit:contain}
-.fi span{font-size:11.5px;line-height:1.1;text-align:center;word-break:break-word}
-.count{font-size:12px;color:var(--muted);margin:6px 0}
-.st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
-.st{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;color:var(--text);font-size:12px;font-weight:700}
-.st:hover{border-color:var(--accent)}
-.st canvas{width:84px;height:62px}
-.txt-btns{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px}
-#stickerCtrl{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;display:none;margin-bottom:10px}
-#stickerCtrl.on{display:block}
-#stText{width:100%;min-height:60px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:8px;font-size:15px;resize:vertical}
-#textOpts{display:none;margin-bottom:6px}
-#textOpts.on{display:block}
-.ad-wrap{flex:none;margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
-.ad-wrap[hidden]{display:none}
-.ad-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#6c7385;margin-bottom:4px}
-.ad-slot{height:100px;max-width:320px;margin:0 auto;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
-.ad-slot.empty{border:1px dashed #3d4354;color:#5d6477;font-size:13px}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#000d;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:90vw;text-align:center}
-.toast.on{opacity:1;transform:translateX(-50%)}
-.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35}
-/* export dialog */
-.modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:25;padding:16px}
+.recent button{flex:none;border:1px solid var(--line);background:#fff;border-radius:8px;padding:3px}
+.recent img{width:40px;height:27px;object-fit:contain;display:block}
+.flag-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px;align-content:start}
+.fi{background:none;border:2px solid transparent;border-radius:12px;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.fi:hover{background:var(--soft)}
+.fi.on{border-color:var(--ink);background:#fff8d6}
+.fi img{width:62px;height:42px;object-fit:contain;filter:drop-shadow(0 1px 1px #0002)}
+.fi span{font-size:13px;line-height:1.1;text-align:center;font-weight:600}
+.count{font-size:13px;color:var(--muted)}
+details.more{border:1px solid var(--line);border-radius:12px;background:var(--soft)}
+details.more summary{padding:8px 12px;font-weight:700;cursor:pointer;font-size:15px}
+details.more .in{padding:2px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.opt{display:grid;grid-template-columns:70px 1fr 42px;align-items:center;gap:8px;font-size:14px}
+.val{color:var(--muted);font-size:13px;text-align:right}
+.btn-row{display:flex;flex-wrap:wrap;gap:6px}
+select{border:1px solid var(--line);border-radius:8px;padding:5px;background:#fff}
+input[type=range]{width:100%;accent-color:var(--ink)}
+
+.st-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.st{background:none;border:2px solid transparent;border-radius:14px;padding:4px;display:flex;flex-direction:column;align-items:center;font-size:13px;font-weight:700}
+.st:hover{background:var(--soft);border-color:var(--line)}
+.st canvas{width:88px;height:65px}
+.txt-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 4px;font-weight:700;font-size:15px;display:flex;flex-direction:column;align-items:center}
+.seg button .ic{font-size:22px}
+.seg button.on{border-color:var(--ink);background:var(--sun)}
+.swatches{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid #0003}
+.sw.on{outline:3px solid var(--ink);outline-offset:2px}
+.picker{position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;border:2px dashed var(--muted)}
+.picker input{position:absolute;inset:-8px;width:46px;height:46px;border:0;padding:0;cursor:pointer}
+label.chk{display:flex;align-items:center;gap:8px;font-size:15px;cursor:pointer}
+label.chk input{width:18px;height:18px;accent-color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:999px;padding:4px 12px 4px 6px;font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px}
+.chip i{width:20px;height:20px;border-radius:50%;display:inline-block;border:1px solid #0003}
+.chip.on{border-color:var(--ink)}
+.chip.plain{padding:4px 12px}
+
+.ad-wrap{flex:none;border-top:1px solid var(--line);padding:8px 14px 12px}
+.ad-label{font-size:11px;color:#9aa1b0;margin-bottom:4px}
+.ad-slot{height:90px;max-width:320px;margin:0 auto;border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ad-slot.empty{border:1px dashed #c9d0dc;color:#a3aab8;font-size:13px}
+
+/* ---------- export dialog ---------- */
+.modal{position:fixed;inset:0;background:#1b1d2466;display:none;align-items:center;justify-content:center;z-index:40;padding:16px}
 .modal.on{display:flex}
-.dlg{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(100%,380px)}
-.dlg h2{margin:0 0 10px;font-size:20px}
-.dlg h3{margin:12px 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
-.dlg .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
-.dlg .actions .primary{grid-column:1/-1;padding:11px;font-size:16px}
-/* about / SEO section */
-.about{max-width:900px;margin:30px auto 0;padding:0 18px 40px;color:#c9cedb;line-height:1.55}
-.about h2{color:var(--text);font-size:26px;margin:0 0 8px}
-.about h3{color:var(--text);font-size:18px;margin:22px 0 6px}
-.about ol,.about ul{padding-left:20px;margin:6px 0}
+.dlg{background:#fff;border:2px solid var(--ink);box-shadow:0 6px 0 var(--ink);border-radius:20px;padding:20px;width:min(100%,380px);display:flex;flex-direction:column;gap:10px}
+.dlg h2{margin:0;font-size:22px}
+.dlg h3{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.dlg .main{padding:10px;font-size:17px}
+
+/* ---------- helper bot ---------- */
+.bot-btn{position:fixed;right:18px;bottom:18px;z-index:30;display:flex;align-items:center;gap:8px;border:2px solid var(--ink);background:#fff;border-radius:999px;
+  padding:5px 14px 5px 5px;font-weight:800;font-size:15px;box-shadow:0 3px 0 var(--ink)}
+.bot-btn .face{width:38px;height:38px}
+.bot{position:fixed;right:18px;bottom:18px;z-index:35;width:min(360px,calc(100vw - 24px));height:min(520px,calc(100vh - 100px));background:#fff;border:2px solid var(--ink);
+  box-shadow:0 6px 0 var(--ink);border-radius:20px;display:flex;flex-direction:column;overflow:hidden}
+.bot-head{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.bot-head .face{width:36px;height:36px}
+.bot-head b{display:block;font-size:16px;line-height:1.1}
+.bot-head small{color:var(--muted);font-size:13px}
+.bot-head button{margin-left:auto;border:0;background:none;font-size:22px;line-height:1;padding:4px 8px;color:var(--muted)}
+.bot-msgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:88%;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;white-space:pre-line}
+.msg.b{background:var(--soft);border:1px solid var(--line);align-self:flex-start;border-bottom-left-radius:4px}
+.msg.u{background:var(--ink);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.msg .act{display:block;margin-top:8px}
+.bot-quick{display:flex;gap:6px;overflow-x:auto;padding:0 12px 8px;flex:none}
+.bot-quick button{flex:none;border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700}
+.bot-form{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}
+.bot-form input{flex:1;border:2px solid var(--line);border-radius:12px;padding:8px 12px;font-size:15px;background:var(--soft)}
+.bot-form input:focus{outline:none;border-color:var(--ink);background:#fff}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:50;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+
+/* ---------- about / SEO ---------- */
+.about{max-width:760px;margin:40px auto 0;padding:0 18px 30px;line-height:1.55;color:#3a3f4c}
+.about h2{color:var(--ink);font-size:28px;margin:0 0 8px;line-height:1.15}
+.about h3{color:var(--ink);font-size:19px;margin:24px 0 6px}
+.about ol{padding-left:22px;margin:6px 0}
 .about p{margin:6px 0}
-footer{text-align:center;color:#6c7385;font-size:13px;padding:0 0 30px}
-footer b{color:var(--accent)}
-@media (max-width:1100px){
-  .app{grid-template-columns:1fr;height:auto}
-  .stage{order:-2}
-  .side{order:-1}
+footer{text-align:center;color:var(--muted);font-size:14px;padding:0 0 90px}
+footer b{color:var(--ink)}
+
+@media (max-width:1000px){
+  .app{grid-template-columns:1fr;height:auto;padding:4px 12px 12px;gap:14px}
   .canvas-wrap{width:min(100%,560px)}
-  .tools{grid-template-columns:repeat(5,1fr)}
-  .flag-grid{max-height:420px}
-  #tab-stickers{overflow:visible}
+  .side{overflow:visible}
+  .tabs{position:sticky;top:58px;background:#fff;z-index:5;border-radius:22px 22px 0 0}
+  .page{overflow:visible}
+  .flag-grid{max-height:52vh;overflow:auto;overscroll-behavior:contain}
+  .empty-hint .wide{display:none}.empty-hint .narrow{display:inline}
+  .empty-hint b{font-size:21px}
 }
 @media (max-width:560px){
-  header{padding-left:12px;padding-right:12px;gap:8px}
-  header h1{font-size:16px}
-  header .btn{padding:6px 9px;font-size:13px;white-space:nowrap}
+  header{padding-left:12px;padding-right:12px;gap:6px}
+  header h1{font-size:17px}
   .hide-sm{display:none}
-  .app{padding:10px;gap:10px}
+  .shape{padding:5px 9px 5px 6px;font-size:14px}
+  .bot-btn .lbl{display:none}
+  .bot-btn{padding:5px}
+  .bot{right:12px;bottom:12px}
+  .bot-btn{right:12px;bottom:12px}
 }
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <header>
-  <div class="logo"></div>
-  <h1>Countryball <span>Studio</span></h1>
+  <div class="logo" aria-hidden="true"></div>
+  <h1>Countryball Studio</h1>
   <div class="spacer"></div>
-  <button class="btn" onclick="randomBall()" title="Random countryball">🎲<span class="hide-sm"> Random</span></button>
-  <button class="btn primary" onclick="openExport()">⬇ <span class="hide-sm">Download</span></button>
+  <button class="btn icon" id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)" aria-label="Undo">↶</button>
+  <button class="btn icon" id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)" aria-label="Redo">↷</button>
+  <button class="btn" onclick="randomBall()" title="Make a random countryball (R)">🎲<span class="hide-sm"> Random</span></button>
+  <button class="btn main" onclick="openExport()">⬇<span class="hide-sm"> Download</span></button>
 </header>
 
 <div class="app">
-  <!-- LEFT: TOOLS -->
-  <aside class="panel" id="toolPanel">
-    <div class="sec">
-      <h3>Shape</h3>
-      <div class="shapes" id="shapes"></div>
-    </div>
-    <div class="sec">
-      <h3>Tools</h3>
-      <div class="tools">
-        <button class="tool active" data-tool="pencil"><span class="ic">✏️</span>Pencil</button>
-        <button class="tool" data-tool="eraser"><span class="ic">🧽</span>Eraser</button>
-        <button class="tool" data-tool="bucket"><span class="ic">🪣</span>Bucket</button>
-        <button class="tool" data-tool="flag"><span class="ic">🏳️</span>Flag</button>
-        <button class="tool" data-tool="move"><span class="ic">✋</span>Move</button>
-      </div>
-    </div>
-    <div class="sec">
-      <h3>Color</h3>
-      <div class="row"><input type="color" id="color" value="#000000"><span class="val" id="colorHex" style="text-align:left">#000000</span></div>
-      <div class="swatches" id="swatches"></div>
-    </div>
-    <div class="sec">
-      <h3>Brush / Eraser Size</h3>
-      <div class="row"><input type="range" id="size" min="1" max="80" value="8"><span class="val" id="sizeV">8</span></div>
-    </div>
-    <div class="sec">
-      <h3>Fill Tolerance</h3>
-      <div class="row"><input type="range" id="tol" min="0" max="150" value="40"><span class="val" id="tolV">40</span></div>
-    </div>
-    <div class="sec">
-      <h3>Look</h3>
-      <div class="row"><span style="font-size:13px;white-space:nowrap">Outline</span><input type="range" id="outline" min="0" max="24" value="8"><span class="val" id="outlineV">8</span></div>
-      <label class="chk"><input type="checkbox" id="shading"> Shine &amp; shadow</label>
-      <label class="chk"><input type="checkbox" id="clip" checked> Keep drawing inside</label>
-    </div>
-    <div class="sec">
-      <h3>Background</h3>
-      <div class="chips" id="bgChips"></div>
-      <input type="color" id="bgColor" value="#8fd3ff" hidden>
-    </div>
-    <div class="sec">
-      <h3>History</h3>
-      <div class="grid2">
-        <button class="btn" id="undoBtn" onclick="undo()">↶ Undo</button>
-        <button class="btn" id="redoBtn" onclick="redo()">↷ Redo</button>
-        <button class="btn danger" onclick="clearDrawings()">🧹 Clear</button>
-        <button class="btn danger" onclick="resetAll()">♻ Reset</button>
-      </div>
-      <div class="hint">Your work is saved automatically on this device.<br>Shortcuts: Ctrl+Z / Ctrl+Y · P pencil · E eraser · B bucket · F flag · V move · R random · Del delete sticker</div>
-    </div>
-  </aside>
-
-  <!-- CENTER: CANVAS -->
   <main class="stage">
-    <div class="canvas-wrap"><canvas id="cv" aria-label="Countryball canvas"></canvas></div>
-    <div class="status" id="status">Loading flags…</div>
+    <div class="canvas-wrap">
+      <canvas id="cv" aria-label="Your countryball"></canvas>
+      <div class="empty-hint" id="emptyHint"><b>Start with a flag</b><span class="wide">Pick a country on the right</span><span class="narrow">Pick a country below</span></div>
+    </div>
+    <div class="selbar" id="selbar" hidden>
+      <span class="nm" id="selName"></span>
+      <textarea id="selText" maxlength="140" placeholder="Type here…" hidden></textarea>
+      <input type="color" id="selColor" value="#1b1d24" title="Text color" hidden>
+      <button class="btn small" onclick="stAction('smaller')" title="Smaller">－</button>
+      <button class="btn small" onclick="stAction('bigger')" title="Bigger">＋</button>
+      <button class="btn small" onclick="stAction('flip')">⇋ Flip</button>
+      <button class="btn small" onclick="stAction('dup')">⧉ Copy</button>
+      <button class="btn small" onclick="stAction('front')">⬆ Front</button>
+      <button class="btn small warn" onclick="stAction('del')">🗑 Delete</button>
+    </div>
+    <div class="shape-row" id="shapes" role="group" aria-label="Shape"></div>
+    <div class="tip" id="tip"></div>
   </main>
 
-  <!-- RIGHT: FLAGS & STICKERS -->
-  <aside class="panel side">
-    <div class="tabs">
-      <button class="tab on" data-tab="flags">🏳️ Flags</button>
-      <button class="tab" data-tab="stickers">👀 Face &amp; Extras</button>
-    </div>
+  <aside class="side">
+    <nav class="tabs" role="tablist">
+      <button class="tab on" data-tab="flag"><span class="ic">🏳️</span>Flag</button>
+      <button class="tab" data-tab="eyes"><span class="ic">👀</span>Eyes</button>
+      <button class="tab" data-tab="addons"><span class="ic">🎩</span>Add-ons</button>
+      <button class="tab" data-tab="draw"><span class="ic">✏️</span>Draw</button>
+      <button class="tab" data-tab="style"><span class="ic">🎨</span>Style</button>
+    </nav>
 
-    <div class="tabpage on" id="tab-flags">
-      <input class="search" id="search" placeholder="Search country… (e.g. Japan, Brazil)">
-      <div class="picked">
-        <div class="ph" id="pickedImgWrap"></div>
-        <div class="nm" id="pickedName">No flag selected<small>Click a country in the list</small></div>
-        <button class="btn primary" id="applyBtn" onclick="applyPendingFlag()">Apply</button>
-      </div>
-      <details class="opts">
-        <summary>⚙ Flag placement</summary>
-        <div class="opt"><span>Mode</span><select id="fMode"><option value="cover">Cover (fill shape)</option><option value="contain">Contain (whole flag)</option></select><span></span></div>
-        <div class="opt"><span>Scale</span><input type="range" id="fZoom" min="50" max="250" value="100"><span class="val" id="fZoomV">100%</span></div>
-        <div class="opt"><span>Rotate</span><input type="range" id="fRot" min="-180" max="180" value="0"><span class="val" id="fRotV">0°</span></div>
-        <div class="opt"><span>X</span><input type="range" id="fX" min="-100" max="100" value="0"><span class="val" id="fXV">0</span></div>
-        <div class="opt"><span>Y</span><input type="range" id="fY" min="-100" max="100" value="0"><span class="val" id="fYV">0</span></div>
-        <div class="grid2" style="margin-top:8px">
-          <button class="btn" onclick="flipFlag('y')">↕ Upside down</button>
-          <button class="btn" onclick="flipFlag('x')">⇋ Mirror</button>
-          <button class="btn" onclick="centerFlag()">⊙ Center</button>
-          <button class="btn danger" onclick="removeFlag()">✕ Remove</button>
+    <section class="page on" id="page-flag">
+      <input class="search" id="search" placeholder="Search a country…" aria-label="Search a country">
+      <div class="recent" id="recent" aria-label="Recently used flags"></div>
+      <details class="more" id="flagMore">
+        <summary>Flag options</summary>
+        <div class="in">
+          <div class="btn-row">
+            <button class="btn small" onclick="flipFlag('y')">↕ Upside down</button>
+            <button class="btn small" onclick="flipFlag('x')">⇋ Mirror</button>
+            <button class="btn small" onclick="centerFlag()">⊙ Reset position</button>
+          </div>
+          <div class="opt"><span>Size</span><input type="range" id="fZoom" min="50" max="250" value="100"><span class="val" id="fZoomV">100%</span></div>
+          <div class="opt"><span>Turn</span><input type="range" id="fRot" min="-180" max="180" value="0"><span class="val" id="fRotV">0°</span></div>
+          <div class="opt"><span>Left/right</span><input type="range" id="fX" min="-100" max="100" value="0"><span class="val" id="fXV">0</span></div>
+          <div class="opt"><span>Up/down</span><input type="range" id="fY" min="-100" max="100" value="0"><span class="val" id="fYV">0</span></div>
+          <div class="opt"><span>Fit</span><select id="fMode"><option value="cover">Fill the shape</option><option value="contain">Show whole flag</option></select><span></span></div>
+          <div class="btn-row">
+            <label class="btn small">📁 Use my own image<input type="file" id="upload" accept="image/*" hidden></label>
+            <button class="btn small warn" onclick="removeFlag()">✕ Remove flag</button>
+          </div>
         </div>
-        <label class="btn" style="width:100%;margin-top:7px">📁 Upload your own flag<input type="file" id="upload" accept="image/*" hidden></label>
-        <div class="hint">The flag is always clipped to the shape. In "Contain" mode, empty space is filled with the flag's edge color.</div>
       </details>
-      <div class="recent" id="recent"></div>
       <div class="count" id="count"></div>
       <div class="flag-grid" id="flagGrid"></div>
-    </div>
+    </section>
 
-    <div class="tabpage" id="tab-stickers">
-      <div id="stickerCtrl">
-        <h3 style="margin-top:0">Selected</h3>
-        <div id="textOpts">
-          <textarea id="stText" maxlength="140" placeholder="Type your text…"></textarea>
-          <div class="row" id="textColorRow" style="margin-top:6px"><span style="font-size:13px">Text color</span><input type="color" id="stColor" value="#111111"></div>
-        </div>
-        <div class="opt"><span>Size</span><input type="range" id="stSize" min="15" max="400" value="100"><span class="val" id="stSizeV">100%</span></div>
-        <div class="opt"><span>Rotate</span><input type="range" id="stRot" min="-180" max="180" value="0"><span class="val" id="stRotV">0°</span></div>
-        <div class="grid2" style="margin-top:8px">
-          <button class="btn" onclick="stAction('flip')">⇋ Flip</button>
-          <button class="btn" onclick="stAction('front')">⬆ To front</button>
-          <button class="btn" onclick="stAction('dup')">⧉ Duplicate</button>
-          <button class="btn danger" onclick="stAction('del')">🗑 Delete</button>
-        </div>
-      </div>
-      <h3>Text</h3>
+    <section class="page" id="page-eyes">
+      <p class="help" style="margin:0">Tap to add. Drag on the picture to move.</p>
+      <div class="st-grid" id="eyeGrid"></div>
+    </section>
+
+    <section class="page" id="page-addons">
+      <h2>Text</h2>
       <div class="txt-btns">
         <button class="btn" onclick="addText('bubble')">💬 Speech bubble</button>
         <button class="btn" onclick="addText('plain')">🔤 Text</button>
       </div>
-      <h3>Eyes</h3>
-      <div class="st-grid" id="eyeGrid"></div>
-      <h3>Hats</h3>
+      <h2>Hats</h2>
       <div class="st-grid" id="hatGrid"></div>
-      <h3>Extras</h3>
+      <h2>Face extras</h2>
       <div class="st-grid" id="accGrid"></div>
-      <div class="hint">Adding something switches to the Move tool. Drag = move · bottom-right handle = resize · top handle = rotate.</div>
-    </div>
+    </section>
+
+    <section class="page" id="page-draw">
+      <div class="seg" id="drawTools">
+        <button data-tool="pencil" class="on"><span class="ic">✏️</span>Pencil</button>
+        <button data-tool="eraser"><span class="ic">🧽</span>Eraser</button>
+        <button data-tool="bucket"><span class="ic">🪣</span>Fill</button>
+      </div>
+      <h2>Color</h2>
+      <div class="swatches" id="swatches"></div>
+      <h2>Size</h2>
+      <div class="opt" style="grid-template-columns:1fr 42px"><input type="range" id="size" min="1" max="80" value="8" aria-label="Brush size"><span class="val" id="sizeV">8</span></div>
+      <label class="chk"><input type="checkbox" id="clip" checked> Stay inside the shape</label>
+      <details class="more">
+        <summary>Fill settings</summary>
+        <div class="in"><div class="opt"><span>Tolerance</span><input type="range" id="tol" min="0" max="150" value="40"><span class="val" id="tolV">40</span></div>
+        <p class="help" style="margin:0">Higher fills more similar colors at once.</p></div>
+      </details>
+      <button class="btn quiet" onclick="clearDrawings()">🧹 Clear my drawing</button>
+    </section>
+
+    <section class="page" id="page-style">
+      <h2>Background</h2>
+      <div class="chips" id="bgChips"></div>
+      <input type="color" id="bgColor" value="#8fd3ff" hidden>
+      <h2>Outline</h2>
+      <div class="opt" style="grid-template-columns:1fr 42px"><input type="range" id="outline" min="0" max="24" value="8" aria-label="Outline thickness"><span class="val" id="outlineV">8</span></div>
+      <label class="chk"><input type="checkbox" id="shading"> Shine &amp; shadow</label>
+      <h2>Start over</h2>
+      <button class="btn quiet warn" onclick="resetAll()">♻ Clear everything</button>
+    </section>
 
     <!-- The one and only ad spot. Keep it small. -->
     <div class="ad-wrap" id="adWrap" hidden>
@@ -305,35 +335,46 @@ footer b{color:var(--accent)}
   <p>Countryball Studio lets you make your own countryball in a few seconds, right in your browser. Pick a real flag from 265 countries and regions, choose a classic ball or a special shape like a cube, triangle or brick, then add eyes, hats and speech bubbles. When you are done, download it as a PNG with a transparent or colored background. No sign-up, and it works on phones too.</p>
   <h3>How to make a countryball</h3>
   <ol>
-    <li>Choose a shape on the left: ball, cube, triangle or brick.</li>
-    <li>Search for a country on the right and tap <b>Apply</b>. Use <b>Upside down</b> or <b>Mirror</b> if your countryball needs it.</li>
-    <li>Open <b>Face &amp; Extras</b> and add eyes. Drag them where you want, resize with the corner handle.</li>
-    <li>Add a hat, a mustache or a speech bubble with your own text.</li>
-    <li>Press <b>Download</b> and save your countryball as a PNG.</li>
+    <li>Pick a country in the <b>Flag</b> tab. Need Polandball upside down? Open <b>Flag options</b>.</li>
+    <li>Choose a shape under the picture: ball, cube, triangle or brick.</li>
+    <li>Add eyes in the <b>Eyes</b> tab and drag them into place.</li>
+    <li>Add a hat or a speech bubble in <b>Add-ons</b>.</li>
+    <li>Press <b>Download</b> to save it as a PNG.</li>
   </ol>
   <h3>Questions</h3>
   <p><b>Is it free?</b> Yes, completely free.</p>
-  <p><b>Can I use my own flag?</b> Yes. Open "Flag placement" and upload any image.</p>
+  <p><b>Can I use my own flag?</b> Yes. Open "Flag options" and choose your own image.</p>
   <p><b>Does it work offline?</b> Yes. After the first visit you can install it as an app and use it without internet.</p>
 </section>
 <footer>Made by <b>inançX</b></footer>
 
+<!-- export -->
 <div class="modal" id="exportModal" onclick="if(event.target===this)closeExport()">
-  <div class="dlg">
-    <h2>⬇ Save your countryball</h2>
+  <div class="dlg" role="dialog" aria-label="Download">
+    <h2>Save your countryball</h2>
     <h3>Size</h3>
     <div class="chips" id="sizeChips"></div>
     <h3>Background</h3>
     <div class="chips" id="exBgChips"></div>
-    <div class="actions">
-      <button class="btn primary" onclick="doExport('download')">⬇ Download PNG</button>
-      <button class="btn" id="shareBtn" onclick="doExport('share')">📤 Share</button>
-      <button class="btn" id="copyBtn" onclick="doExport('copy')">📋 Copy</button>
+    <button class="btn main" onclick="doExport('download')">⬇ Download PNG</button>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn small" id="shareBtn" onclick="doExport('share')">📤 Share</button>
+      <button class="btn small" id="copyBtn" onclick="doExport('copy')">📋 Copy</button>
+      <button class="btn small quiet" onclick="closeExport()">Close</button>
     </div>
-    <div class="hint" style="text-align:center;margin-top:10px"><a href="#" onclick="closeExport();return false" style="color:var(--muted)">Close</a></div>
   </div>
 </div>
-<div class="toast" id="toast"></div>
+
+<!-- helper bot -->
+<button class="bot-btn" id="botBtn" onclick="openBot()" aria-label="Open help chat"><canvas class="face" width="76" height="76"></canvas><span class="lbl">Need help?</span></button>
+<div class="bot" id="bot" hidden role="dialog" aria-label="Help chat">
+  <div class="bot-head"><canvas class="face" width="72" height="72"></canvas><div><b>Bally</b><small>Countryball helper</small></div><button onclick="closeBot()" aria-label="Close help">×</button></div>
+  <div class="bot-msgs" id="botMsgs" aria-live="polite"></div>
+  <div class="bot-quick" id="botQuick"></div>
+  <form class="bot-form" id="botForm"><input id="botIn" placeholder="Ask how to do something…" autocomplete="off" aria-label="Your question"><button class="btn small main" type="submit">Send</button></form>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
 
 <script src="flags.js"></script>
 <script>
@@ -352,10 +393,15 @@ const drawCv = document.createElement('canvas');
 drawCv.width = drawCv.height = W;
 const dctx = drawCv.getContext('2d', { willReadFrequently: true });
 const FLAG_SVG = window.FLAG_SVG || {};
+const $ = id => document.getElementById(id);
 
 function rr(c, x, y, w, h, r) {
   c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
   c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
 }
 
 /* ================== SHAPES ================== */
@@ -372,22 +418,17 @@ const SHAPES = {
 const R = 300;
 
 const state = {
-  tool: 'pencil', color: '#000000', size: 8, tol: 40, clip: true, outline: 8,
+  tab: 'flag', drawTool: 'pencil', color: '#1b1d24', size: 8, tol: 40, clip: true, outline: 8,
   shape: 'ball', shading: false, bg: { type: 'none', color: '#8fd3ff' },
   flag: { img: null, name: '', code: '', mode: 'cover', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' },
   stickers: [], sel: -1
 };
-let pendingFlag = null, hover = null;
-const $ = id => document.getElementById(id);
+let hover = null;
 const SH = () => SHAPES[state.shape];
+// on the Draw tab the picture is for drawing; everywhere else it moves stickers
+const mode = () => state.tab === 'draw' ? state.drawTool : 'move';
 
-function toast(msg) {
-  const t = $('toast'); t.textContent = msg; t.classList.add('on');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
-}
 function shapeClip(c) { c.beginPath(); SH().path(c); c.clip(); }
-
-// pixel mask of the current shape (fast "is this point inside?" checks)
 let shapeMask = null;
 function buildMask() {
   const t = document.createElement('canvas'); t.width = t.height = W;
@@ -396,8 +437,7 @@ function buildMask() {
   shapeMask = new Uint8Array(W * W);
   for (let i = 0; i < W * W; i++) shapeMask[i] = d[i * 4 + 3] > 127 ? 1 : 0;
 }
-const inShapeXY = (x, y) => x >= 0 && y >= 0 && x < W && y < W && shapeMask[(y | 0) * W + (x | 0)] === 1;
-const inShape = p => inShapeXY(p.x, p.y);
+const inShape = p => p.x >= 0 && p.y >= 0 && p.x < W && p.y < W && shapeMask[(p.y | 0) * W + (p.x | 0)] === 1;
 
 /* ================== BACKGROUND & EFFECTS ================== */
 const BGS = {
@@ -406,7 +446,7 @@ const BGS = {
   sky:   { name: 'Sky', sw: 'linear-gradient(#5ab4f0,#cdeeff)' },
   grass: { name: 'Meadow', sw: 'linear-gradient(#8fd0ff 55%,#6cbf4a 55%)' },
   night: { name: 'Night', sw: 'linear-gradient(#0b1030,#3b2b6b)' },
-  color: { name: 'Color', sw: null },
+  color: { name: 'Any color', sw: null },
 };
 function drawBg(c, bg) {
   if (bg.type === 'none') return;
@@ -453,7 +493,6 @@ function drawFlag(c) {
   c.fillRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
   if (f.img) {
     const iw = f.img.naturalWidth || f.img.width, ih = f.img.naturalHeight || f.img.height;
-    // when rotated 90°, cover the rotated box
     const a = Math.abs(Math.sin((f.rot || 0) * Math.PI / 180));
     const bw = b.w * (1 - a) + b.h * a, bh = b.h * (1 - a) + b.w * a;
     let s = f.mode === 'cover' ? Math.max(bw / iw, bh / ih) : Math.min(bw / iw, bh / ih);
@@ -686,6 +725,7 @@ function placeFor(type) {
   const d = STICKERS[type], sh = SH(), f = sh.face, a = anchor(sh, d.group === 'hat');
   return { type, x: a.x + (d.dx || 0) * R * f.s, y: a.y + (d.dy || 0) * R * f.s, s: f.s, rot: 0, flip: false };
 }
+
 function dims(s) { const d = STICKERS[s.type]; return d.dims ? d.dims(s) : { w: d.w, h: d.h }; }
 function drawSticker(c, s) {
   const d = STICKERS[s.type]; if (!d) return;
@@ -701,10 +741,10 @@ function toLocal(s, p) {
 function drawSelection(c, s) {
   const { w2, h2 } = stBox(s);
   c.save(); c.translate(s.x, s.y); c.rotate(s.rot);
-  c.setLineDash([8, 6]); c.lineWidth = 2.5; c.strokeStyle = '#ffb000'; c.strokeRect(-w2, -h2, w2 * 2, h2 * 2);
+  c.setLineDash([10, 7]); c.lineWidth = 3; c.strokeStyle = '#2457e6'; c.strokeRect(-w2, -h2, w2 * 2, h2 * 2);
   c.setLineDash([]); c.beginPath(); c.moveTo(0, -h2); c.lineTo(0, -h2 - 40); c.stroke();
   for (const [x, y] of [[w2, h2], [0, -h2 - 40]]) {
-    c.beginPath(); c.arc(x, y, 13, 0, Math.PI * 2); c.fillStyle = '#ffcc33'; c.fill(); c.lineWidth = 3; c.strokeStyle = INK; c.stroke();
+    c.beginPath(); c.arc(x, y, 15, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill(); c.lineWidth = 4; c.strokeStyle = '#2457e6'; c.stroke();
   }
   c.restore();
 }
@@ -723,14 +763,12 @@ function render(opts = {}) {
   }
   state.stickers.forEach(s => drawSticker(c, s));
   if (opts.export) return;
-  if (state.tool === 'move' && state.sel >= 0 && state.stickers[state.sel]) drawSelection(c, state.stickers[state.sel]);
-  if (hover && (state.tool === 'pencil' || state.tool === 'eraser')) {
+  if (mode() === 'move' && state.sel >= 0 && state.stickers[state.sel]) drawSelection(c, state.stickers[state.sel]);
+  if (hover && (mode() === 'pencil' || mode() === 'eraser')) {
     c.beginPath(); c.arc(hover.x, hover.y, Math.max(2, state.size / 2), 0, Math.PI * 2);
-    c.lineWidth = 1.5; c.strokeStyle = state.tool === 'eraser' ? '#e63946' : '#555'; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]);
+    c.lineWidth = 1.5; c.strokeStyle = mode() === 'eraser' ? '#e3242b' : '#555'; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]);
   }
-  if (state.tool === 'flag' && pendingFlag && hover && inShape(hover)) {
-    c.save(); c.beginPath(); SH().path(c); c.lineWidth = state.outline + 10; c.strokeStyle = '#ffcc33'; c.setLineDash([14, 10]); c.stroke(); c.restore();
-  }
+  $('emptyHint').hidden = !!(state.flag.img || state.stickers.length || drawVer || state.bg.type !== 'none');
 }
 
 /* ================== HISTORY (UNDO/REDO) + AUTOSAVE ================== */
@@ -770,14 +808,14 @@ function saveNow() {
     const f = state.flag;
     let custom = '';
     if (f.img && f.code.startsWith('custom') && f.img.src && f.img.src.length < 1500000) custom = f.img.src;
-    const data = {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
       shape: state.shape, outline: state.outline, shading: state.shading, bg: state.bg,
       flag: { code: f.img ? f.code : '', name: f.name, mode: f.mode, zoom: f.zoom, ox: f.ox, oy: f.oy, rot: f.rot, fx: f.fx, fy: f.fy, custom },
       stickers: state.stickers, draw: savedDrawURL
-    };
-    localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-  } catch (e) { /* storage full or blocked: ignore */ }
+    }));
+  } catch (e) { /* storage full or blocked */ }
 }
+function loadImg(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
 async function loadSaved() {
   let data = null;
   try { data = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
@@ -788,25 +826,24 @@ async function loadSaved() {
     if (data.bg && BGS[data.bg.type]) state.bg = { ...state.bg, ...data.bg };
     state.stickers = Array.isArray(data.stickers) ? data.stickers.filter(s => STICKERS[s.type]) : [];
     buildMask();
-    if (data.draw) {
-      const im = await loadImg(data.draw); dctx.drawImage(im, 0, 0); markDraw();
-    }
+    if (data.draw) { const im = await loadImg(data.draw); dctx.drawImage(im, 0, 0); markDraw(); }
     const f = data.flag || {};
     let img = null, bg = '#ffffff';
     if (f.code && FLAG_SVG[f.code]) img = (await loadFlagImage({ code: f.code })).img;
     else if (f.custom) img = await loadImg(f.custom);
     if (img) bg = edgeColor(img);
     state.flag = { img, name: f.name || '', code: img ? f.code : '', mode: f.mode || 'cover', zoom: f.zoom || 1, ox: f.ox || 0, oy: f.oy || 0, rot: f.rot || 0, fx: !!f.fx, fy: !!f.fy, bg };
-    return true;
+    return !!(img || state.stickers.length || data.draw);
   } catch (e) { return false; }
 }
-function loadImg(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
 
 function clearDrawings() { dctx.clearRect(0, 0, W, W); markDraw(); pushHistory(); render(); toast('Drawing cleared'); }
 function resetAll() {
-  dctx.clearRect(0, 0, W, W); markDraw();
-  state.flag = { img: null, name: '', code: '', mode: state.flag.mode, zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' };
-  state.stickers = []; state.sel = -1; pushHistory(); syncUI(); render(); toast('Everything reset');
+  dctx.clearRect(0, 0, W, W); drawVer = 0;
+  state.flag = { img: null, name: '', code: '', mode: 'cover', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' };
+  state.stickers = []; state.sel = -1; state.bg = { ...state.bg, type: 'none' }; state.shading = false; state.outline = 8;
+  if (state.shape !== 'ball') { state.shape = 'ball'; buildMask(); }
+  pushHistory(); syncUI(); render(); toast('Cleared. Pick a flag to start again');
 }
 
 /* ================== DRAWING ================== */
@@ -816,7 +853,7 @@ function pos(e) {
 }
 function strokeSeg(a, b) {
   dctx.save();
-  const erase = state.tool === 'eraser';
+  const erase = mode() === 'eraser';
   if (state.clip && !erase) shapeClip(dctx);
   dctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over';
   dctx.strokeStyle = dctx.fillStyle = state.color;
@@ -826,22 +863,15 @@ function strokeSeg(a, b) {
   dctx.restore();
 }
 function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-
 function bucketFill(p) {
   const x0 = Math.floor(p.x), y0 = Math.floor(p.y);
   if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= W) return;
-  if (state.clip && !inShape(p)) { toast('Bucket only works inside the shape (keep-inside is on)'); return; }
+  if (state.clip && !inShape(p)) { toast('Tap inside the shape to fill'); return; }
   const tmp = document.createElement('canvas'); tmp.width = tmp.height = W;
   const tc = tmp.getContext('2d', { willReadFrequently: true });
-  let data;
-  try {
-    drawFlag(tc); tc.drawImage(drawCv, 0, 0);
-    if (state.outline > 0) { tc.beginPath(); SH().path(tc); tc.lineWidth = state.outline; tc.lineJoin = 'round'; tc.strokeStyle = INK; tc.stroke(); }
-    data = tc.getImageData(0, 0, W, W).data;
-  } catch (e) {
-    data = dctx.getImageData(0, 0, W, W).data;
-    toast('Flag image is protected; fill used your drawing only');
-  }
+  drawFlag(tc); tc.drawImage(drawCv, 0, 0);
+  if (state.outline > 0) { tc.beginPath(); SH().path(tc); tc.lineWidth = state.outline; tc.lineJoin = 'round'; tc.strokeStyle = INK; tc.stroke(); }
+  const data = tc.getImageData(0, 0, W, W).data;
   const tol = state.tol, j0 = (y0 * W + x0) * 4;
   const t = [data[j0], data[j0 + 1], data[j0 + 2], data[j0 + 3]];
   const mask = new Uint8Array(W * W);
@@ -882,32 +912,23 @@ function bucketFill(p) {
 let drawing = false, last = null, drag = null;
 cv.addEventListener('pointerdown', e => {
   const p = pos(e); cv.setPointerCapture(e.pointerId);
-  switch (state.tool) {
-    case 'pencil': case 'eraser':
-      drawing = true; last = p; strokeSeg(p, p); render(); break;
-    case 'bucket': bucketFill(p); break;
-    case 'flag':
-      if (!pendingFlag) toast('Pick a flag on the right first');
-      else if (inShape(p)) applyPendingFlag();
-      else toast('Click inside the shape');
-      break;
-    case 'move': {
-      const s = state.stickers[state.sel];
-      if (s) {
-        const l = toLocal(s, p), { w2, h2 } = stBox(s);
-        if (Math.hypot(l.x - w2, l.y - h2) < 24) { drag = { mode: 'scale', s0: s.s, d0: Math.hypot(p.x - s.x, p.y - s.y), moved: false }; break; }
-        if (Math.hypot(l.x, l.y + h2 + 40) < 24) { drag = { mode: 'rot', r0: s.rot, a0: Math.atan2(p.y - s.y, p.x - s.x), moved: false }; break; }
-      }
-      let hit = -1;
-      for (let i = state.stickers.length - 1; i >= 0; i--) {
-        const st = state.stickers[i], l = toLocal(st, p), { w2, h2 } = stBox(st);
-        if (Math.abs(l.x) <= w2 && Math.abs(l.y) <= h2) { hit = i; break; }
-      }
-      state.sel = hit;
-      if (hit >= 0) { const st = state.stickers[hit]; drag = { mode: 'move', ox: p.x - st.x, oy: p.y - st.y, moved: false }; }
-      syncStickerCtrl(); render(); break;
-    }
+  const m = mode();
+  if (m === 'pencil' || m === 'eraser') { drawing = true; last = p; strokeSeg(p, p); render(); return; }
+  if (m === 'bucket') { bucketFill(p); return; }
+  const s = state.stickers[state.sel];
+  if (s) {
+    const l = toLocal(s, p), { w2, h2 } = stBox(s);
+    if (Math.hypot(l.x - w2, l.y - h2) < 28) { drag = { mode: 'scale', s0: s.s, d0: Math.hypot(p.x - s.x, p.y - s.y), moved: false }; return; }
+    if (Math.hypot(l.x, l.y + h2 + 40) < 28) { drag = { mode: 'rot', r0: s.rot, a0: Math.atan2(p.y - s.y, p.x - s.x), moved: false }; return; }
   }
+  let hit = -1;
+  for (let i = state.stickers.length - 1; i >= 0; i--) {
+    const st = state.stickers[i], l = toLocal(st, p), { w2, h2 } = stBox(st);
+    if (Math.abs(l.x) <= w2 && Math.abs(l.y) <= h2) { hit = i; break; }
+  }
+  state.sel = hit;
+  if (hit >= 0) { const st = state.stickers[hit]; drag = { mode: 'move', ox: p.x - st.x, oy: p.y - st.y, moved: false }; }
+  syncSel(); render();
 });
 cv.addEventListener('pointermove', e => {
   const p = pos(e); hover = p;
@@ -917,12 +938,13 @@ cv.addEventListener('pointermove', e => {
     if (drag.mode === 'move') { s.x = p.x - drag.ox; s.y = p.y - drag.oy; }
     else if (drag.mode === 'scale') { s.s = Math.min(5, Math.max(0.15, drag.s0 * Math.hypot(p.x - s.x, p.y - s.y) / Math.max(1, drag.d0))); }
     else if (drag.mode === 'rot') { s.rot = drag.r0 + Math.atan2(p.y - s.y, p.x - s.x) - drag.a0; }
-    syncStickerCtrl(); render(); return;
+    render(); return;
   }
-  if (state.tool === 'move') {
+  const m = mode();
+  if (m === 'move') {
     const over = state.stickers.some(st => { const l = toLocal(st, p), b = stBox(st); return Math.abs(l.x) <= b.w2 && Math.abs(l.y) <= b.h2; });
     cv.style.cursor = over ? 'move' : 'default';
-  }
+  } else cv.style.cursor = m === 'bucket' ? 'cell' : 'crosshair';
   render();
 });
 const endPointer = () => {
@@ -933,16 +955,25 @@ cv.addEventListener('pointerup', endPointer);
 cv.addEventListener('pointercancel', endPointer);
 cv.addEventListener('pointerleave', () => { if (!drawing && !drag) { hover = null; render(); } });
 
-/* ================== LEFT PANEL ================== */
-const cursors = { pencil: 'crosshair', eraser: 'crosshair', bucket: 'cell', flag: 'copy', move: 'default' };
-function setTool(t) {
-  state.tool = t;
-  document.querySelectorAll('.tool').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
-  cv.style.cursor = cursors[t]; if (t !== 'move') state.sel = -1;
-  syncStickerCtrl(); render();
+/* ================== TABS ================== */
+const TIPS = {
+  flag: 'Tap a country to put its flag on.',
+  eyes: 'Tap eyes to add them. Drag on the picture to move · corner dot resizes · top dot turns.',
+  addons: 'Tap to add. Drag on the picture to move · corner dot resizes · top dot turns.',
+  draw: 'Draw right on the picture. Undo with ↶ if you slip.',
+  style: 'Change the background, outline and shine.',
+};
+function openTab(t) {
+  state.tab = t;
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + t));
+  if (t === 'draw') state.sel = -1;
+  $('tip').textContent = TIPS[t];
+  syncSel(); render();
 }
-document.querySelectorAll('.tool').forEach(b => b.onclick = () => setTool(b.dataset.tool));
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => openTab(b.dataset.tab));
 
+/* ================== SHAPES ROW ================== */
 const SHAPE_ICONS = {
   ball: '<circle cx="15" cy="15" r="12"/>',
   cube: '<rect x="3.5" y="3.5" width="23" height="23" rx="2"/>',
@@ -950,14 +981,13 @@ const SHAPE_ICONS = {
   brick: '<rect x="1.5" y="8" width="27" height="14" rx="1.5"/>',
 };
 for (const [k, sh] of Object.entries(SHAPES)) {
-  const b = document.createElement('button'); b.className = 'shape'; b.dataset.shape = k; b.title = sh.name;
-  b.innerHTML = `<svg viewBox="0 0 30 30"><g fill="#fff" stroke="#111" stroke-width="2.5" stroke-linejoin="round">${SHAPE_ICONS[k]}</g><g fill="#dc143c">${k === 'ball' ? '<path d="M3 15 a12 12 0 0 0 24 0z"/>' : ''}</g></svg>${sh.name}`;
+  const b = document.createElement('button'); b.className = 'shape'; b.dataset.shape = k;
+  b.innerHTML = `<svg viewBox="0 0 30 30" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">${SHAPE_ICONS[k]}</g></svg>${sh.name}`;
   b.onclick = () => setShape(k);
   $('shapes').appendChild(b);
 }
 function setShape(k) {
   if (state.shape === k) return;
-  // move stickers along with the new shape (hats stay on top of the head)
   const from = SH(), to = SHAPES[k];
   state.stickers.forEach(s => {
     const hat = STICKERS[s.type].group === 'hat', a = anchor(from, hat), b = anchor(to, hat), r = to.face.s / from.face.s;
@@ -966,34 +996,37 @@ function setShape(k) {
   state.shape = k; buildMask(); pushHistory(); syncUI(); render();
 }
 
+/* ================== DRAW PAGE ================== */
+document.querySelectorAll('#drawTools button').forEach(b => b.onclick = () => {
+  state.drawTool = b.dataset.tool;
+  document.querySelectorAll('#drawTools button').forEach(x => x.classList.toggle('on', x === b));
+  render();
+});
+const SW = ['#1b1d24', '#ffffff', '#e30a17', '#ffd700', '#0038a8', '#239f40', '#ff7f00', '#8b5a2b', '#7f7f7f', '#ff69b4', '#6a0dad', '#00bcd4'];
+function setColor(c) {
+  state.color = c;
+  document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c));
+  $('anyColor').parentElement.classList.toggle('on', !SW.includes(c));
+}
+SW.forEach(c => { const s = document.createElement('button'); s.className = 'sw'; s.style.background = c; s.dataset.c = c; s.title = c; s.setAttribute('aria-label', 'Color ' + c); s.onclick = () => setColor(c); $('swatches').appendChild(s); });
+$('swatches').insertAdjacentHTML('beforeend', '<label class="picker sw" title="Pick any color" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)"><input type="color" id="anyColor" value="#2457e6" aria-label="Pick any color"></label>');
+$('anyColor').oninput = e => setColor(e.target.value);
+$('size').oninput = e => { state.size = +e.target.value; $('sizeV').textContent = state.size; };
+$('tol').oninput = e => { state.tol = +e.target.value; $('tolV').textContent = state.tol; };
+$('clip').onchange = e => { state.clip = e.target.checked; };
+
+/* ================== STYLE PAGE ================== */
 for (const [k, b] of Object.entries(BGS)) {
   const ch = document.createElement('button'); ch.className = 'chip'; ch.dataset.bg = k;
   ch.innerHTML = `<i style="background:${b.sw || state.bg.color}"></i>${b.name}`;
-  ch.onclick = () => { if (k === 'color') { $('bgColor').click(); } state.bg.type = k; pushHistory(); syncUI(); render(); };
+  ch.onclick = () => { if (k === 'color') $('bgColor').click(); state.bg.type = k; pushHistory(); syncUI(); render(); };
   $('bgChips').appendChild(ch);
 }
 $('bgColor').oninput = e => { state.bg.color = e.target.value; state.bg.type = 'color'; syncUI(); render(); };
 $('bgColor').onchange = () => pushHistory();
-
-const SW = ['#000000', '#ffffff', '#e30a17', '#ffd700', '#0038a8', '#239f40', '#ff7f00', '#8b5a2b', '#7f7f7f', '#ff69b4', '#6a0dad', '#00bcd4'];
-function setColor(c) {
-  state.color = c; $('color').value = c; $('colorHex').textContent = c;
-  document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c));
-}
-SW.forEach(c => { const s = document.createElement('div'); s.className = 'sw'; s.style.background = c; s.dataset.c = c; s.onclick = () => setColor(c); $('swatches').appendChild(s); });
-$('color').oninput = e => setColor(e.target.value);
-$('size').oninput = e => { state.size = +e.target.value; $('sizeV').textContent = state.size; };
-$('tol').oninput = e => { state.tol = +e.target.value; $('tolV').textContent = state.tol; };
-$('clip').onchange = e => { state.clip = e.target.checked; };
 $('outline').oninput = e => { state.outline = +e.target.value; $('outlineV').textContent = state.outline; render(); };
 $('outline').onchange = pushHistory;
 $('shading').onchange = e => { state.shading = e.target.checked; pushHistory(); render(); };
-setColor('#000000');
-
-document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
-  document.querySelectorAll('.tabpage').forEach(p => p.classList.toggle('on', p.id === 'tab-' + t.dataset.tab));
-});
 
 /* ================== FLAG LIST ================== */
 const SPECIAL = {
@@ -1002,7 +1035,6 @@ const SPECIAL = {
   'bq-bo': 'Bonaire', 'bq-sa': 'Saba', 'bq-se': 'Sint Eustatius', 'eu': 'European Union',
   'xa': 'Abkhazia', 'xc': 'Northern Cyprus', 'xo': 'South Ossetia', 'xk': 'Kosovo'
 };
-// other names people search for
 const ALIASES = {
   tr: 'turkey turkiye', cz: 'czech republic czechia', ci: 'ivory coast', mm: 'burma', mk: 'macedonia', sz: 'swaziland eswatini',
   cv: 'cape verde', us: 'usa america united states', gb: 'uk britain england', ae: 'uae emirates', kr: 'korea', kp: 'north korea dprk',
@@ -1012,13 +1044,12 @@ const ALIASES = {
 let countries = [];
 const urlCache = {};
 const svgURL = c => urlCache[c] || (urlCache[c] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(FLAG_SVG[c]));
-
 function loadCountries() {
   const codes = Object.keys(FLAG_SVG);
   let dn = null; try { dn = new Intl.DisplayNames(['en'], { type: 'region' }); } catch (_) {}
   countries = codes.map(c => ({ code: c, name: SPECIAL[c] || (dn && !c.includes('-') && dn.of(c.toUpperCase())) || c.toUpperCase() }));
   countries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
-  renderList(); renderRecent(); updateStatus();
+  renderList(); renderRecent();
 }
 function norm(s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ı/g, 'i'); }
 function renderList() {
@@ -1027,15 +1058,16 @@ function renderList() {
   const g = $('flagGrid'); g.innerHTML = '';
   const frag = document.createDocumentFragment();
   list.forEach(c => {
-    const b = document.createElement('button'); b.className = 'fi'; b.title = c.name;
-    if (pendingFlag && pendingFlag.code === c.code) b.classList.add('on');
-    const im = document.createElement('img'); im.loading = 'lazy'; im.alt = c.name; im.src = svgURL(c.code);
+    const b = document.createElement('button'); b.className = 'fi'; b.title = c.name; b.dataset.code = c.code;
+    if (state.flag.code === c.code) b.classList.add('on');
+    const im = document.createElement('img'); im.loading = 'lazy'; im.alt = ''; im.src = svgURL(c.code);
     const sp = document.createElement('span'); sp.textContent = c.name;
-    b.append(im, sp); b.onclick = () => pickFlag(c, b);
+    b.append(im, sp); b.onclick = () => applyFlag(c);
     frag.appendChild(b);
   });
   g.appendChild(frag);
-  $('count').textContent = `${list.length} / ${countries.length} flags`;
+  $('count').textContent = q ? `${list.length} found` : `${countries.length} flags`;
+  if (q && !list.length) $('count').textContent = 'No country found. Try the English name, e.g. "Germany".';
 }
 $('search').oninput = renderList;
 
@@ -1051,13 +1083,12 @@ function renderRecent() {
   const box = $('recent'); box.innerHTML = '';
   getRecent().forEach(code => {
     const c = countries.find(x => x.code === code); if (!c) return;
-    const b = document.createElement('button'); b.title = c.name;
-    const im = document.createElement('img'); im.src = svgURL(code); im.alt = c.name;
-    b.appendChild(im); b.onclick = () => { pickFlag(c, null); applyPendingFlag(); };
+    const b = document.createElement('button'); b.title = c.name; b.setAttribute('aria-label', c.name);
+    const im = document.createElement('img'); im.src = svgURL(code); im.alt = '';
+    b.appendChild(im); b.onclick = () => applyFlag(c);
     box.appendChild(b);
   });
 }
-
 const imgCache = {};
 function loadFlagImage(item) {
   return new Promise((res, rej) => {
@@ -1075,67 +1106,46 @@ function loadFlagImage(item) {
     im.src = svgURL(item.code);
   });
 }
-function pickFlag(c, btn) {
-  pendingFlag = c;
-  document.querySelectorAll('.fi.on').forEach(x => x.classList.remove('on'));
-  if (btn) btn.classList.add('on');
-  const w = $('pickedImgWrap');
-  w.innerHTML = ''; const im = document.createElement('img');
-  im.src = c.img ? c.img.src : svgURL(c.code);
-  im.style.cssText = 'width:54px;height:36px;object-fit:cover;border-radius:4px';
-  w.appendChild(im);
-  $('pickedName').innerHTML = '';
-  $('pickedName').append(c.name, Object.assign(document.createElement('small'), { textContent: 'Tap the shape or "Apply"' }));
-  setTool('flag');
-  loadFlagImage(c).catch(() => {});
-}
-async function applyPendingFlag(silent) {
-  if (!pendingFlag) { toast('Pick a flag first'); return; }
-  const item = pendingFlag;
+async function applyFlag(item, silent) {
   try {
     const { img } = await loadFlagImage(item);
     state.flag = { img, name: item.name, code: item.code, mode: $('fMode').value, zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: edgeColor(img) };
     addRecent(item.code);
-    if (!silent) { pushHistory(); toast(`${item.name} applied 🎉`); }
+    document.querySelectorAll('.fi').forEach(b => b.classList.toggle('on', b.dataset.code === item.code));
+    if (!silent) { pushHistory(); toast(`${item.name} ✔  Next: add eyes 👀`); }
     syncUI(); render();
-  } catch (e) { toast('Could not load flag, try another one'); }
+  } catch (e) { toast('This flag did not load. Try another one.'); }
 }
 function centerFlag() { if (!state.flag.img) return; Object.assign(state.flag, { zoom: 1, ox: 0, oy: 0, rot: 0 }); pushHistory(); syncUI(); render(); }
-function removeFlag() { if (!state.flag.img) return; state.flag = { ...state.flag, img: null, name: '', code: '', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' }; pushHistory(); syncUI(); render(); }
+function removeFlag() { if (!state.flag.img) return; state.flag = { ...state.flag, img: null, name: '', code: '', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' }; pushHistory(); syncUI(); render(); renderList(); }
 function flipFlag(axis) {
-  if (!state.flag.img) { toast('Apply a flag first'); return; }
+  if (!state.flag.img) { toast('Pick a flag first'); return; }
   if (axis === 'y') state.flag.fy = !state.flag.fy; else state.flag.fx = !state.flag.fx;
   pushHistory(); render();
 }
-
 $('fMode').onchange = e => { state.flag.mode = e.target.value; if (state.flag.img) pushHistory(); render(); };
 $('fZoom').oninput = e => { state.flag.zoom = e.target.value / 100; $('fZoomV').textContent = e.target.value + '%'; render(); };
 $('fRot').oninput = e => { state.flag.rot = +e.target.value; $('fRotV').textContent = e.target.value + '°'; render(); };
 $('fX').oninput = e => { state.flag.ox = e.target.value / 100; $('fXV').textContent = e.target.value; render(); };
 $('fY').oninput = e => { state.flag.oy = e.target.value / 100; $('fYV').textContent = e.target.value; render(); };
 ['fZoom', 'fRot', 'fX', 'fY'].forEach(id => $(id).onchange = () => { if (state.flag.img) pushHistory(); });
-
 $('upload').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const rd = new FileReader();
-  rd.onload = () => {
-    const im = new Image();
-    im.onload = () => { pickFlag({ code: 'custom-' + Date.now(), name: f.name.replace(/\.[^.]+$/, ''), img: im }, null); applyPendingFlag(); };
-    im.src = rd.result;
-  };
+  rd.onload = () => { const im = new Image(); im.onload = () => applyFlag({ code: 'custom-' + Date.now(), name: f.name.replace(/\.[^.]+$/, ''), img: im }); im.src = rd.result; };
   rd.readAsDataURL(f); e.target.value = '';
 };
 
-/* ================== STICKER PANEL ================== */
+/* ================== STICKERS UI ================== */
 function buildStickerButtons() {
   for (const [type, d] of Object.entries(STICKERS)) {
     if (d.text) continue;
     const b = document.createElement('button'); b.className = 'st';
-    const c = document.createElement('canvas'); c.width = 168; c.height = 124;
+    const c = document.createElement('canvas'); c.width = 176; c.height = 130;
     const g = c.getContext('2d');
-    g.fillStyle = '#e8c79a'; g.beginPath(); g.arc(84, d.group === 'hat' ? 92 : 62, 58, 0, Math.PI * 2); g.fill();
-    const sc = Math.min(140 / d.w, 100 / d.h);
-    g.save(); g.translate(84, 62); g.scale(sc, sc); d.draw(g); g.restore();
+    g.fillStyle = '#f0d7ae'; g.beginPath(); g.arc(88, d.group === 'hat' ? 98 : 65, 60, 0, Math.PI * 2); g.fill();
+    const sc = Math.min(146 / d.w, 104 / d.h);
+    g.save(); g.translate(88, 65); g.scale(sc, sc); d.draw(g); g.restore();
     const sp = document.createElement('span'); sp.textContent = d.name;
     b.append(c, sp); b.onclick = () => addSticker(type);
     ({ eye: $('eyeGrid'), hat: $('hatGrid'), acc: $('accGrid') })[d.group].appendChild(b);
@@ -1143,48 +1153,40 @@ function buildStickerButtons() {
 }
 function addSticker(type, opts) {
   const s = { ...placeFor(type), ...(opts || {}) };
-  state.stickers.push(s);
-  setTool('move'); state.sel = state.stickers.length - 1;
-  pushHistory(); syncStickerCtrl(); render();
+  state.stickers.push(s); state.sel = state.stickers.length - 1;
+  pushHistory(); syncSel(); render();
   return s;
 }
 function addText(kind) {
-  const f = SH().face;
-  const s = kind === 'bubble'
-    ? addSticker('bubble', { text: 'Hello!', x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: .9 })
-    : addSticker('plain', { text: 'Your text', x: f.x, y: Math.min(760, SH().box.y + SH().box.h + 50), s: .9, color: '#111111' });
-  setTimeout(() => { $('stText').focus(); $('stText').select(); }, 30);
-  return s;
+  const f = SH().face, b = SH().box;
+  if (kind === 'bubble') addSticker('bubble', { text: 'Hello!', x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: .9 });
+  else addSticker('plain', { text: 'Your text', x: f.x, y: Math.min(760, b.y + b.h + 50), s: .9, color: '#1b1d24' });
+  $('selText').focus(); $('selText').select();
 }
-function syncStickerCtrl() {
-  const s = state.stickers[state.sel];
-  $('stickerCtrl').classList.toggle('on', !!s && state.tool === 'move');
+function syncSel() {
+  const s = mode() === 'move' ? state.stickers[state.sel] : null;
+  $('selbar').hidden = !s;
   if (!s) return;
-  const isText = !!STICKERS[s.type].text;
-  $('textOpts').classList.toggle('on', isText);
-  if (isText) {
-    if (document.activeElement !== $('stText')) $('stText').value = s.text || '';
-    $('textColorRow').style.display = s.type === 'plain' ? 'flex' : 'none';
-    $('stColor').value = s.color || '#111111';
-  }
-  const pct = Math.round(s.s * 100), deg = Math.round(((s.rot * 180 / Math.PI) % 360 + 540) % 360 - 180);
-  $('stSize').value = pct; $('stSizeV').textContent = pct + '%';
-  $('stRot').value = deg; $('stRotV').textContent = deg + '°';
+  const d = STICKERS[s.type];
+  $('selName').textContent = d.name;
+  $('selText').hidden = !d.text;
+  $('selColor').hidden = s.type !== 'plain';
+  if (d.text && document.activeElement !== $('selText')) $('selText').value = s.text || '';
+  if (s.type === 'plain') $('selColor').value = s.color || '#1b1d24';
 }
-$('stText').oninput = e => { const s = state.stickers[state.sel]; if (!s || !STICKERS[s.type].text) return; s.text = e.target.value; render(); };
-$('stText').onchange = () => pushHistory();
-$('stColor').oninput = e => { const s = state.stickers[state.sel]; if (!s) return; s.color = e.target.value; render(); };
-$('stColor').onchange = () => pushHistory();
-$('stSize').oninput = e => { const s = state.stickers[state.sel]; if (!s) return; s.s = e.target.value / 100; $('stSizeV').textContent = e.target.value + '%'; render(); };
-$('stRot').oninput = e => { const s = state.stickers[state.sel]; if (!s) return; s.rot = e.target.value * Math.PI / 180; $('stRotV').textContent = e.target.value + '°'; render(); };
-$('stSize').onchange = $('stRot').onchange = () => pushHistory();
+$('selText').oninput = e => { const s = state.stickers[state.sel]; if (s && STICKERS[s.type].text) { s.text = e.target.value; render(); } };
+$('selText').onchange = () => pushHistory();
+$('selColor').oninput = e => { const s = state.stickers[state.sel]; if (s) { s.color = e.target.value; render(); } };
+$('selColor').onchange = () => pushHistory();
 function stAction(a) {
   const i = state.sel, s = state.stickers[i]; if (!s) return;
   if (a === 'flip') s.flip = !s.flip;
+  if (a === 'bigger') s.s = Math.min(5, s.s * 1.15);
+  if (a === 'smaller') s.s = Math.max(.15, s.s / 1.15);
   if (a === 'front') { state.stickers.splice(i, 1); state.stickers.push(s); state.sel = state.stickers.length - 1; }
   if (a === 'dup') { state.stickers.push({ ...s, x: s.x + 25, y: s.y + 25 }); state.sel = state.stickers.length - 1; }
   if (a === 'del') { state.stickers.splice(i, 1); state.sel = -1; }
-  pushHistory(); syncStickerCtrl(); render();
+  pushHistory(); syncSel(); render();
 }
 
 /* ================== RANDOM ================== */
@@ -1194,16 +1196,12 @@ async function randomBall() {
   const c = pick(countries);
   dctx.clearRect(0, 0, W, W); markDraw();
   state.stickers = []; state.sel = -1;
-  pendingFlag = c;
-  await applyPendingFlag(true);
+  await applyFlag(c, true);
   const eyes = Object.keys(STICKERS).filter(k => STICKERS[k].group === 'eye');
   const hats = Object.keys(STICKERS).filter(k => STICKERS[k].group === 'hat');
-  const mk = placeFor;
-  state.stickers.push(mk(pick(eyes)));
-  if (Math.random() < .4) state.stickers.push(mk(pick(hats)));
-  setTool('move'); state.sel = -1;
+  state.stickers.push(placeFor(pick(eyes)));
+  if (Math.random() < .4) state.stickers.push(placeFor(pick(hats)));
   pushHistory(); syncUI(); render();
-  $('pickedName').innerHTML = ''; $('pickedName').append(c.name, Object.assign(document.createElement('small'), { textContent: 'Random pick 🎲' }));
   toast(`🎲 ${c.name}!`);
 }
 
@@ -1217,42 +1215,39 @@ function syncUI() {
   $('fY').value = Math.round(f.oy * 100); $('fYV').textContent = Math.round(f.oy * 100);
   $('outline').value = state.outline; $('outlineV').textContent = state.outline;
   $('shading').checked = state.shading;
-  document.querySelectorAll('.shape').forEach(b => b.classList.toggle('on', b.dataset.shape === state.shape));
+  document.querySelectorAll('.shape').forEach(b => { const on = b.dataset.shape === state.shape; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
   document.querySelectorAll('#bgChips .chip').forEach(b => {
     b.classList.toggle('on', b.dataset.bg === state.bg.type);
     if (b.dataset.bg === 'color') b.querySelector('i').style.background = state.bg.color;
   });
-  syncStickerCtrl(); updateStatus();
-}
-function updateStatus() {
-  $('status').innerHTML = '';
-  $('status').append('Flag: ', Object.assign(document.createElement('b'), { textContent: state.flag.img ? state.flag.name : 'none' }),
-    ` · ${SH().name} · ${countries.length} flags`);
+  document.querySelectorAll('.fi').forEach(b => b.classList.toggle('on', b.dataset.code === f.code));
+  syncSel();
 }
 
 /* ================== EXPORT ================== */
-const EX_SIZES = [[800, 'Normal'], [1600, 'HD'], [2400, 'Ultra HD']];
+const EX_SIZES = [[800, 'Normal'], [1600, 'HD'], [2400, 'Extra large']];
 let exSize = 1600, exBg = 'scene';
 function buildExportChips() {
   $('sizeChips').innerHTML = ''; $('exBgChips').innerHTML = '';
   EX_SIZES.forEach(([px, n]) => {
-    const b = document.createElement('button'); b.className = 'chip' + (exSize === px ? ' on' : '');
-    b.textContent = `${n} · ${px}px`; b.onclick = () => { exSize = px; buildExportChips(); };
+    const b = document.createElement('button'); b.className = 'chip plain' + (exSize === px ? ' on' : '');
+    b.textContent = `${n} (${px}px)`; b.onclick = () => { exSize = px; buildExportChips(); };
     $('sizeChips').appendChild(b);
   });
-  [['scene', state.bg.type === 'none' ? 'Transparent' : 'Same as editor'], ['none', 'Transparent'], ['white', 'White']]
-    .filter((x, i, a) => !(x[0] === 'none' && state.bg.type === 'none'))
-    .forEach(([k, n]) => {
-      const b = document.createElement('button'); b.className = 'chip' + (exBg === k ? ' on' : '');
-      b.textContent = n; b.onclick = () => { exBg = k; buildExportChips(); };
-      $('exBgChips').appendChild(b);
-    });
+  const opts = state.bg.type === 'none'
+    ? [['scene', 'Transparent'], ['white', 'White']]
+    : [['scene', 'Same as the picture'], ['none', 'Transparent'], ['white', 'White']];
+  if (!opts.some(o => o[0] === exBg)) exBg = 'scene';
+  opts.forEach(([k, n]) => {
+    const b = document.createElement('button'); b.className = 'chip plain' + (exBg === k ? ' on' : '');
+    b.textContent = n; b.onclick = () => { exBg = k; buildExportChips(); };
+    $('exBgChips').appendChild(b);
+  });
 }
 function openExport() {
-  if (exBg === 'none' && state.bg.type === 'none') exBg = 'scene';
   buildExportChips();
-  $('shareBtn').style.display = navigator.canShare ? '' : 'none';
-  $('copyBtn').style.display = (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) ? '' : 'none';
+  $('shareBtn').hidden = !navigator.canShare;
+  $('copyBtn').hidden = !(window.ClipboardItem && navigator.clipboard && navigator.clipboard.write);
   $('exportModal').classList.add('on');
 }
 function closeExport() { $('exportModal').classList.remove('on'); }
@@ -1260,15 +1255,14 @@ function makeBlob() {
   return new Promise((res, rej) => {
     const k = exSize / W, t = document.createElement('canvas'); t.width = t.height = exSize;
     const c = t.getContext('2d'); c.scale(k, k);
-    const bg = exBg === 'scene' ? state.bg : { type: exBg };
-    render({ ctx: c, export: true, bg });
+    render({ ctx: c, export: true, bg: exBg === 'scene' ? state.bg : { type: exBg } });
     try { t.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'); } catch (e) { rej(e); }
   });
 }
 function fileName() { return `countryball-${(state.flag.name || 'design').replace(/\s+/g, '-').toLowerCase()}.png`; }
 async function doExport(how) {
   let blob;
-  try { blob = await makeBlob(); } catch (e) { toast('This image can\'t be exported; try another flag'); return; }
+  try { blob = await makeBlob(); } catch (e) { toast('Saving failed. Try a different flag or image.'); return; }
   if (how === 'share') {
     const file = new File([blob], fileName(), { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1278,30 +1272,108 @@ async function doExport(how) {
     how = 'download';
   }
   if (how === 'copy') {
-    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); toast('Copied! Paste it anywhere 📋'); closeExport(); }
-    catch (e) { toast('Copy is not allowed here, use Download'); }
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); toast('Copied. Paste it anywhere 📋'); closeExport(); }
+    catch (e) { toast('This browser blocks copying. Use Download instead.'); }
     return;
   }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = fileName();
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-  toast('PNG downloaded ✔'); closeExport();
+  toast('Downloaded ✔'); closeExport();
+}
+
+/* ================== HELPER BOT ("Bally") ==================
+   Works offline: it matches your question to known answers. No data leaves the page. */
+const BOT = [
+  { k: /\bhello|\bhi\b|\bhey\b|merhaba|selam|\bsa\b/, en: 'Hi! I can explain anything on this page. Ask me something like "how do I add a hat?"', tr: 'Merhaba! Bu sayfadaki her şeyi anlatabilirim. "Şapka nasıl eklenir?" gibi bir şey sor.' },
+  { k: /what.*countryball|countryball (is|nedir)|nedir|polandball/, en: 'Countryballs are round characters painted with a country\'s flag. They come from Polandball comics, where countries act out history and jokes.', tr: 'Countryball\'lar ülke bayrağıyla boyanmış yuvarlak karakterlerdir. Ülkelerin tarih ve şakaları canlandırdığı Polandball çizgi romanlarından çıktı.' },
+  { k: /delete|remove|\bsil(\b|er|me|in|ey)|kaldır/, en: 'Select the item on the picture and press 🗑 Delete in the bar under it (or the Delete key). To remove the flag: Flag options → Remove flag.', tr: 'Öğeyi seç ve altındaki çubuktan 🗑 Delete\'e bas (ya da Delete tuşu). Bayrağı kaldırmak için: Flag options → Remove flag.' },
+  { k: /upside|poland|reverse|flip.*flag|ters|polonya|baş aşağı/, en: 'Open the Flag tab → "Flag options" → Upside down. That\'s the classic Polandball look. "Mirror" flips it left-right.', tr: 'Flag sekmesi → "Flag options" → Upside down. Klasik Polandball görünümü budur. "Mirror" sağ-sol çevirir.', act: ['flagmore', 'Show flag options', 'Bayrak ayarlarını aç'] },
+  { k: /\bown\b|upload|my (image|flag|picture)|custom|kendi|yükle|resim/, en: 'Open "Flag options" in the Flag tab and press "Use my own image". Any picture works.', tr: 'Flag sekmesinde "Flag options" → "Use my own image". Herhangi bir resim olur.', act: ['flagmore', 'Show flag options', 'Bayrak ayarlarını aç'] },
+  { k: /eye|face|göz|surat|yüz|ifade/, en: 'Open the Eyes tab and tap any eyes. They land on the face; drag them on the picture to move.', tr: 'Eyes sekmesini aç ve bir göze dokun. Yüze yerleşir, resmin üstünde sürükleyerek taşı.', act: ['eyes', 'Open Eyes tab', 'Eyes sekmesini aç'] },
+  { k: /\bhats?\b|crown|fez|şapka|taç|fes|kask/, en: 'Add-ons tab → Hats. Tap one and it sits on top of the head. Drag to adjust.', tr: 'Add-ons sekmesi → Hats. Birine dokun, kafanın üstüne oturur. Sürükleyip ayarla.', act: ['addons', 'Open Add-ons', 'Add-ons aç'] },
+  { k: /text|speech|bubble|say|write|word|yazı|balon|konuş|söyle/, en: 'Add-ons tab → Speech bubble or Text. Then type in the box under the picture. Press Enter for a new line.', tr: 'Add-ons sekmesi → Speech bubble veya Text. Sonra resmin altındaki kutuya yaz. Enter yeni satır açar.', act: ['addons', 'Open Add-ons', 'Add-ons aç'] },
+  { k: /\bmove|drag|resize|bigger|smaller|size|rotate|turn|taşı|sürükle|büyüt|küçült|döndür|boyut/, en: 'Tap a sticker on the picture to select it. Drag to move, the corner dot resizes, the top dot turns it. The bar under the picture has + and − too.', tr: 'Resimdeki öğeye dokunup seç. Sürükleyerek taşı, köşedeki nokta büyütür, üstteki nokta döndürür. Resmin altındaki çubukta + ve − de var.' },
+  { k: /background|sky|night|arka ?plan|gökyüzü|gece/, en: 'Style tab → Background. "None" means a transparent PNG.', tr: 'Style sekmesi → Background. "None" şeffaf PNG demek.', act: ['style', 'Open Style tab', 'Style sekmesini aç'] },
+  { k: /shape|cube|triangle|brick|square|şekil|küp|üçgen|tuğla|kare/, en: 'Use the shape buttons under the picture: Ball, Cube, Triangle, Brick. Eyes and hats move with it.', tr: 'Resmin altındaki şekil düğmelerini kullan: Ball, Cube, Triangle, Brick. Göz ve şapkalar da birlikte kayar.' },
+  { k: /draw|paint|pencil|color|colour|brush|çiz|boya|kalem|renk|fırça/, en: 'Open the Draw tab, pick Pencil, a color and a size, then draw on the picture. "Stay inside the shape" keeps lines clean.', tr: 'Draw sekmesini aç, Pencil, renk ve boyut seç, resmin üstüne çiz. "Stay inside the shape" çizgileri şeklin içinde tutar.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
+  { k: /fill|bucket|doldur|kova/, en: 'Draw tab → Fill, pick a color, then tap an area. If it fills too much or too little, change "Fill settings".', tr: 'Draw → Fill, renk seç, bir alana dokun. Çok ya da az dolduruyorsa "Fill settings" ayarını değiştir.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
+  { k: /erase|rubber|sil.*çiz|silgi/, en: 'Draw tab → Eraser. It only removes your drawing, not the flag.', tr: 'Draw → Eraser. Sadece çizimini siler, bayrağı silmez.', act: ['draw', 'Open Draw tab', 'Draw sekmesini aç'] },
+  { k: /outline|border|shine|shadow|3d|kenar|çizgi kalın|parla|gölge/, en: 'Style tab: the Outline slider changes the black border, "Shine & shadow" adds a 3D look.', tr: 'Style sekmesi: Outline kaydırıcısı siyah kenarı değiştirir, "Shine & shadow" 3D görünüm verir.', act: ['style', 'Open Style tab', 'Style sekmesini aç'] },
+  { k: /download|save|png|export|share|copy|indir|kaydet|paylaş|kopyala/, en: 'Press the red Download button at the top. You can pick the size (up to 2400px) and a transparent or white background. On phones you can share it directly.', tr: 'Üstteki kırmızı Download düğmesine bas. Boyutu (2400px\'e kadar) ve şeffaf/beyaz arka planı seçebilirsin. Telefonda direkt paylaşabilirsin.', act: ['export', 'Open Download', 'İndirmeyi aç'] },
+  { k: /undo|mistake|back|geri|hata/, en: 'Use ↶ at the top (or Ctrl+Z). ↷ brings it back (Ctrl+Y).', tr: 'Üstteki ↶ düğmesi (veya Ctrl+Z). ↷ geri getirir (Ctrl+Y).' },
+  { k: /random|dice|surprise|rastgele|zar/, en: 'Press 🎲 Random at the top for a surprise countryball. Press again for another.', tr: 'Üstteki 🎲 Random\'a bas, rastgele bir countryball çıkar. Tekrar bas, başkası gelsin.' },
+  { k: /lost|saved|autosave|kayboldu|kaydol|otomatik/, en: 'Your work saves itself on this device. Close the page and it\'s still here when you come back.', tr: 'Çalışman bu cihazda kendiliğinden kaydolur. Sayfayı kapatıp açınca yerinde durur.' },
+  { k: /\bapp\b|install|offline|phone|uygulama|yükle|çevrimdışı|telefon/, en: 'In your browser menu choose "Install app" or "Add to Home screen". After that it works without internet.', tr: 'Tarayıcı menüsünden "Uygulamayı yükle" ya da "Ana ekrana ekle"yi seç. Sonra internetsiz de çalışır.' },
+  { k: /start|begin|how.*(make|create)|first|nasıl yap|nereden başla|başla|countryball yap/, en: 'Making a countryball takes 3 steps:\n1. Flag tab: tap a country.\n2. Eyes tab: tap a pair of eyes.\n3. Press Download.\nHats, text and drawing are optional extras.', tr: '3 adımda countryball:\n1. Flag sekmesi: bir ülkeye dokun.\n2. Eyes sekmesi: bir göz seç.\n3. Download\'a bas.\nŞapka, yazı ve çizim isteğe bağlı.', act: ['flag', 'Open Flag tab', 'Flag sekmesini aç'] },
+  { k: /find|search|country|flag|bayrak|ülke|ara/, en: 'Go to the Flag tab and type the country name in English, e.g. "Germany". Tap it and it goes on right away. Recently used flags show at the top.', tr: 'Flag sekmesine git, ülkenin İngilizce adını yaz (ör. "Germany"). Dokununca hemen uygulanır. Son kullandıkların üstte çıkar.', act: ['flag', 'Open Flag tab', 'Flag sekmesini aç'] },
+  { k: /free|price|cost|ücret|bedava|para/, en: 'Yes, it\'s completely free. No sign-up.', tr: 'Evet, tamamen ücretsiz. Üyelik yok.' },
+  { k: /thank|thx|teşekkür|sağ ?ol|eyv/, en: 'Happy to help! Have fun 🎉', tr: 'Ne demek! İyi eğlenceler 🎉' },
+];
+const QUICK = { en: ['How do I start?', 'Upside-down flag', 'Add a hat', 'Speech bubble', 'Download'], tr: ['Nasıl başlarım?', 'Ters bayrak', 'Şapka ekle', 'Konuşma balonu', 'İndir'] };
+let botLang = /^tr\b/i.test(navigator.language || '') ? 'tr' : 'en', botStarted = false;
+const isTr = t => /[çğışöüÇĞİŞÖÜ]|\b(nasıl|nedir|ne|nerede|neden|bayrak|şapka|yazı|göz|ekle|yap|var mı|mı|mi)\b/i.test(t);
+function botSay(text, cls, act) {
+  const m = document.createElement('div'); m.className = 'msg ' + cls; m.textContent = text;
+  if (act) {
+    const b = document.createElement('button'); b.className = 'btn small act'; b.textContent = act[botLang === 'tr' ? 2 : 1];
+    b.onclick = () => doBotAction(act[0]); m.appendChild(b);
+  }
+  $('botMsgs').appendChild(m); $('botMsgs').scrollTop = 1e9;
+}
+function doBotAction(a) {
+  if (a === 'export') { openExport(); return; }
+  if (a === 'flagmore') { openTab('flag'); $('flagMore').open = true; }
+  else openTab(a);
+  if (innerWidth < 1000) { closeBot(); document.querySelector('.side').scrollIntoView({ behavior: 'smooth' }); }
+}
+function botQuick() {
+  $('botQuick').innerHTML = '';
+  QUICK[botLang].forEach(q => { const b = document.createElement('button'); b.textContent = q; b.onclick = () => botAsk(q); $('botQuick').appendChild(b); });
+}
+function botAsk(q) {
+  q = q.trim(); if (!q) return;
+  botSay(q, 'u');
+  botLang = isTr(q) ? 'tr' : (/[a-z]/i.test(q) ? 'en' : botLang);
+  const t = q.toLowerCase();
+  const hit = BOT.find(e => e.k.test(t));
+  setTimeout(() => {
+    if (hit) botSay(hit[botLang], 'b', hit.act);
+    else botSay(botLang === 'tr' ? 'Bunu bilmiyorum ama şunları anlatabilirim: bayrak, göz, şapka, yazı, çizim, arka plan, indirme. Aşağıdaki düğmelere de bakabilirsin.' : 'I don\'t know that one yet. I can help with flags, eyes, hats, text, drawing, backgrounds and downloading. Try the buttons below.', 'b');
+    botQuick();
+  }, 250);
+}
+function openBot() {
+  $('bot').hidden = false; $('botBtn').hidden = true;
+  if (!botStarted) { botStarted = true; botSay(botLang === 'tr' ? 'Selam, ben Bally 👋 Countryball yapmakla ilgili ne sorarsan anlatırım.' : 'Hi, I\'m Bally 👋 Ask me anything about making your countryball.', 'b'); botQuick(); }
+  if (innerWidth > 560) $('botIn').focus();
+}
+function closeBot() { $('bot').hidden = true; $('botBtn').hidden = false; }
+$('botForm').onsubmit = e => { e.preventDefault(); botAsk($('botIn').value); $('botIn').value = ''; };
+// Bally's face: a little Polandball
+function drawBotFaces() {
+  document.querySelectorAll('canvas.face').forEach(c => {
+    const g = c.getContext('2d'), s = c.width, r = s / 2 - 3;
+    g.clearRect(0, 0, s, s);
+    g.save(); g.beginPath(); g.arc(s / 2, s / 2, r, 0, 7); g.clip();
+    g.fillStyle = '#fff'; g.fillRect(0, 0, s, s / 2); g.fillStyle = '#e3242b'; g.fillRect(0, s / 2, s, s / 2);
+    g.restore();
+    g.beginPath(); g.arc(s / 2, s / 2, r, 0, 7); g.lineWidth = s / 18; g.strokeStyle = '#1b1d24'; g.stroke();
+    for (const x of [s * .34, s * .64]) { g.beginPath(); g.ellipse(x, s * .42, s * .1, s * .12, 0, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = s / 24; g.stroke(); }
+  });
 }
 
 /* ================== KEYBOARD ================== */
 document.addEventListener('keydown', e => {
   const tg = e.target.tagName;
+  if (e.key === 'Escape') { closeExport(); closeBot(); return; }
   if (tg === 'TEXTAREA' || (tg === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')) return;
-  if (e.key === 'Escape') { closeExport(); return; }
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
   if ((k === 'delete' || k === 'backspace') && state.sel >= 0) { e.preventDefault(); stAction('del'); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
-  if (k === 'r') { randomBall(); return; }
-  const map = { p: 'pencil', e: 'eraser', b: 'bucket', f: 'flag', v: 'move' };
-  if (map[k]) setTool(map[k]);
 });
 
 /* ================== AD SLOT ================== */
@@ -1312,7 +1384,7 @@ function setupAd() {
   if (ADS.html) {
     slot.classList.remove('empty');
     const range = document.createRange(); range.selectNode(slot);
-    slot.appendChild(range.createContextualFragment(ADS.html)); // runs the ad network's script tags
+    slot.appendChild(range.createContextualFragment(ADS.html));
   } else { slot.classList.add('empty'); slot.textContent = 'Ad space'; }
 }
 
@@ -1322,15 +1394,16 @@ function setupAd() {
   buildStickerButtons();
   loadCountries();
   setupAd();
+  drawBotFaces();
+  setColor('#1b1d24');
   const restored = await loadSaved();
-  setTool('pencil');
+  openTab('flag');
   pushHistory();
   syncUI(); render();
-  if (restored) toast('Welcome back! Your last countryball is restored');
+  if (restored) toast('Welcome back! Your last countryball is still here');
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
 })();
 
-/* ================== OFFLINE / INSTALLABLE APP ================== */
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 }
