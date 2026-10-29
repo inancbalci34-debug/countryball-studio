@@ -62,7 +62,7 @@ header h1{font-size:21px;margin:0;font-weight:800;line-height:1;white-space:nowr
 /* ---------- layout ---------- */
 .app{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;padding:4px 18px 18px;max-width:1400px;margin:0 auto;height:calc(100vh - 62px)}
 .stage{display:flex;flex-direction:column;align-items:center;gap:12px;min-height:0;min-width:0}
-.canvas-wrap{position:relative;width:min(100%,calc(100vh - 220px));aspect-ratio:1;flex:none;border-radius:22px;border:2px solid var(--ink);
+.canvas-wrap{position:relative;width:min(100%,calc(100vh - 270px));aspect-ratio:1;flex:none;border-radius:22px;border:2px solid var(--ink);
   background-color:#fff;background-image:linear-gradient(45deg,#eef1f6 25%,transparent 25%),linear-gradient(-45deg,#eef1f6 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eef1f6 75%),linear-gradient(-45deg,transparent 75%,#eef1f6 75%);
   background-size:26px 26px;background-position:0 0,0 13px,13px -13px,-13px 0;overflow:hidden;box-shadow:0 5px 0 var(--ink)}
 canvas#cv{width:100%;height:100%;display:block;touch-action:none}
@@ -76,6 +76,13 @@ canvas#cv{width:100%;height:100%;display:block;touch-action:none}
 .shape.on{background:var(--ink);color:#fff}
 .shape.on svg g:first-child{stroke:#fff}
 
+.balls-row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:100%}
+.bchip{display:inline-flex;align-items:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px 3px 4px;font-weight:700;font-size:14px;max-width:180px}
+.bchip img,.bchip .dot{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--ink);background:#fff;flex:none}
+.bchip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bchip.on{border-color:var(--ink);background:#fff8d6}
+.bchip.add{border-style:dashed;padding:6px 14px;color:var(--ink)}
+.canvas-wrap.wide{aspect-ratio:16/9;width:min(100%,calc((100vh - 270px) * 16 / 9))}
 .selbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:8px 10px;max-width:100%}
 .selbar .nm{font-weight:800}
 .selbar textarea{width:220px;height:42px;border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:15px;resize:none;background:var(--soft)}
@@ -245,6 +252,7 @@ footer b{color:var(--ink)}
       <button class="btn small" onclick="stAction('front')">⬆ Front</button>
       <button class="btn small warn" onclick="stAction('del')">🗑 Delete</button>
     </div>
+    <div class="balls-row" id="ballsRow" role="group" aria-label="Balls in the picture"></div>
     <div class="shape-row" id="shapes" role="group" aria-label="Shape"></div>
     <div class="tip" id="tip"></div>
   </main>
@@ -324,6 +332,8 @@ footer b{color:var(--ink)}
       <h2>Background</h2>
       <div class="chips" id="bgChips"></div>
       <input type="color" id="bgColor" value="#8fd3ff" hidden>
+      <h2>Picture size</h2>
+      <div class="chips" id="sceneChips"></div>
       <h2>Outline</h2>
       <div class="opt" style="grid-template-columns:1fr 42px"><input type="range" id="outline" min="0" max="24" value="8" aria-label="Outline thickness"><span class="val" id="outlineV">8</span></div>
       <label class="chk"><input type="checkbox" id="shading"> Shine &amp; shadow</label>
@@ -336,11 +346,12 @@ footer b{color:var(--ink)}
 
 <section class="about">
   <h2>Free countryball maker</h2>
-  <p>Countryball Studio lets you make your own countryball in a few seconds, right in your browser. Pick a real flag from 265 countries and regions, choose a classic ball or a special shape like a cube, triangle or brick, then add eyes, hats and speech bubbles. When you are done, download it as a PNG with a transparent or colored background. No sign-up, and it works on phones too.</p>
+  <p>Countryball Studio lets you make your own countryball in a few seconds, right in your browser. Pick a real flag from 265 countries and regions, choose a classic ball or a special shape like a cube, triangle or brick, then add eyes, hats and speech bubbles. Put several countryballs in one picture to make your own comic panel. When you are done, download it as a PNG with a transparent or colored background. No sign-up, and it works on phones too.</p>
   <h3>How to make a countryball</h3>
   <ol>
     <li>Pick a country in the <b>Flag</b> tab. Need Polandball upside down? Open <b>Flag options</b>.</li>
     <li>Choose a shape under the picture: ball, cube, triangle or brick.</li>
+    <li>Want two or more countryballs talking? Press <b>+ Add ball</b> under the picture and switch the picture to <b>Wide</b> in Style.</li>
     <li>Add eyes in the <b>Eyes</b> tab and drag them into place.</li>
     <li>Add a hat or a speech bubble in <b>Add-ons</b>.</li>
     <li>Press <b>Download</b> to save it as a PNG.</li>
@@ -383,21 +394,20 @@ footer b{color:var(--ink)}
 <script src="flags.js"></script>
 <script>
 /* ================== ADS (one small spot only) ==================
-   show: false  -> the ad box is hidden completely.
+   show: false  -> the ad column is hidden completely.
    html: ''     -> with show:true, an empty "Ad space" box is shown (for testing the layout).
    Put the ad network's code into html when you have it.                                   */
 const ADS = { show: true, html: '' };
 
-/* ================== BASICS ================== */
+/* ================== BASICS ==================
+   The picture (scene) holds one or more balls. Every ball is designed in its own 800×800
+   space (center 400,410, radius 300) and placed in the scene with x, y, size and flip. */
 const W = 800;
 const cv = document.getElementById('cv');
 const ctx = cv.getContext('2d');
-cv.width = cv.height = W;
-const drawCv = document.createElement('canvas');
-drawCv.width = drawCv.height = W;
-const dctx = drawCv.getContext('2d', { willReadFrequently: true });
 const FLAG_SVG = window.FLAG_SVG || {};
 const $ = id => document.getElementById(id);
+const clone = o => JSON.parse(JSON.stringify(o));
 
 function rr(c, x, y, w, h, r) {
   c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
@@ -405,7 +415,7 @@ function rr(c, x, y, w, h, r) {
 }
 function toast(msg) {
   const t = $('toast'); t.textContent = msg; t.classList.add('on');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2200);
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), 2400);
 }
 
 /* ================== SHAPES ================== */
@@ -420,28 +430,46 @@ const SHAPES = {
            path(c) { rr(c, 50, 230, 700, 360, 16); } },
 };
 const R = 300;
+const masks = {};
+function maskOf(shape) {
+  if (masks[shape]) return masks[shape];
+  const t = document.createElement('canvas'); t.width = t.height = W;
+  const tc = t.getContext('2d'); tc.beginPath(); SHAPES[shape].path(tc); tc.fillStyle = '#000'; tc.fill();
+  const d = tc.getImageData(0, 0, W, W).data, m = new Uint8Array(W * W);
+  for (let i = 0; i < W * W; i++) m[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+  return masks[shape] = m;
+}
+const inShapeLocal = (shape, q) => q.x >= 0 && q.y >= 0 && q.x < W && q.y < W && maskOf(shape)[(q.y | 0) * W + (q.x | 0)] === 1;
 
+/* ================== PICTURE SIZE ================== */
+const SCENES = { square: { name: 'Square', w: 800, h: 800 }, wide: { name: 'Wide (comic)', w: 1280, h: 720 } };
+let SCW = 800, SCH = 800;
+
+/* ================== STATE ================== */
+const newFlag = () => ({ img: null, name: '', code: '', mode: 'cover', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' });
+let ballSeq = 0, verCounter = 0;
+function makeBall(over) { return { id: ++ballSeq, shape: 'ball', flag: newFlag(), x: SCW / 2, y: SCH * .5125, s: SCH / 800, flip: false, stickers: [], dv: 0, moved: false, ...(over || {}) }; }
 const state = {
   tab: 'flag', drawTool: 'pencil', color: '#1b1d24', size: 8, tol: 40, clip: true, outline: 8,
-  shape: 'ball', shading: false, bg: { type: 'none', color: '#8fd3ff' },
-  flag: { img: null, name: '', code: '', mode: 'cover', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' },
-  stickers: [], sel: -1
+  scene: 'square', shading: false, bg: { type: 'none', color: '#8fd3ff' },
+  balls: [], active: 0, sel: null, ballSel: false
 };
-let hover = null;
-const SH = () => SHAPES[state.shape];
-// on the Draw tab the picture is for drawing; everywhere else it moves stickers
+const ballById = id => state.balls.find(b => b.id === id);
+const active = () => ballById(state.active) || state.balls[0];
+const SH = () => SHAPES[active().shape];
 const mode = () => state.tab === 'draw' ? state.drawTool : 'move';
 
-function shapeClip(c) { c.beginPath(); SH().path(c); c.clip(); }
-let shapeMask = null;
-function buildMask() {
-  const t = document.createElement('canvas'); t.width = t.height = W;
-  const tc = t.getContext('2d'); tc.beginPath(); SH().path(tc); tc.fillStyle = '#000'; tc.fill();
-  const d = tc.getImageData(0, 0, W, W).data;
-  shapeMask = new Uint8Array(W * W);
-  for (let i = 0; i < W * W; i++) shapeMask[i] = d[i * 4 + 3] > 127 ? 1 : 0;
+// each ball has its own drawing layer in its 800×800 space
+const layers = {};
+function layerOf(b) {
+  if (!layers[b.id]) { const c = document.createElement('canvas'); c.width = c.height = W; layers[b.id] = { cv: c, ctx: c.getContext('2d', { willReadFrequently: true }) }; }
+  return layers[b.id];
 }
-const inShape = p => p.x >= 0 && p.y >= 0 && p.x < W && p.y < W && shapeMask[(p.y | 0) * W + (p.x | 0)] === 1;
+const markDraw = b => { b.dv = ++verCounter; };
+
+// scene <-> ball coordinates
+function ballXf(c, b) { c.translate(b.x, b.y); c.scale(b.s * (b.flip ? -1 : 1), b.s); c.translate(-400, -410); }
+function toBall(b, p) { let x = (p.x - b.x) / b.s; if (b.flip) x = -x; return { x: x + 400, y: (p.y - b.y) / b.s + 410 }; }
 
 /* ================== BACKGROUND & EFFECTS ================== */
 const BGS = {
@@ -453,58 +481,62 @@ const BGS = {
   color: { name: 'Any color', sw: null },
 };
 function drawBg(c, bg) {
+  const w = SCW, h = SCH;
   if (bg.type === 'none') return;
-  if (bg.type === 'white') { c.fillStyle = '#fff'; c.fillRect(0, 0, W, W); return; }
-  if (bg.type === 'color') { c.fillStyle = bg.color; c.fillRect(0, 0, W, W); return; }
-  if (bg.type === 'sky') { const g = c.createLinearGradient(0, 0, 0, W); g.addColorStop(0, '#4aa8ec'); g.addColorStop(1, '#d6f1ff'); c.fillStyle = g; c.fillRect(0, 0, W, W); return; }
+  if (bg.type === 'white') { c.fillStyle = '#fff'; c.fillRect(0, 0, w, h); return; }
+  if (bg.type === 'color') { c.fillStyle = bg.color; c.fillRect(0, 0, w, h); return; }
+  if (bg.type === 'sky') { const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#4aa8ec'); g.addColorStop(1, '#d6f1ff'); c.fillStyle = g; c.fillRect(0, 0, w, h); return; }
   if (bg.type === 'grass') {
-    const g = c.createLinearGradient(0, 0, 0, 560); g.addColorStop(0, '#6fbff5'); g.addColorStop(1, '#d4f0ff'); c.fillStyle = g; c.fillRect(0, 0, W, W);
-    c.fillStyle = '#ffffffcc'; for (const [x, y, s] of [[130, 120, 1], [600, 80, .8], [470, 190, .6]]) { c.beginPath(); c.ellipse(x, y, 60 * s, 22 * s, 0, 0, 7); c.ellipse(x + 35 * s, y - 12 * s, 40 * s, 22 * s, 0, 0, 7); c.fill(); }
-    const g2 = c.createLinearGradient(0, 600, 0, W); g2.addColorStop(0, '#79c955'); g2.addColorStop(1, '#4e9b33'); c.fillStyle = g2;
-    c.beginPath(); c.moveTo(0, 620); c.quadraticCurveTo(400, 585, W, 620); c.lineTo(W, W); c.lineTo(0, W); c.fill(); return;
+    const gy = h * .76;
+    const g = c.createLinearGradient(0, 0, 0, gy); g.addColorStop(0, '#6fbff5'); g.addColorStop(1, '#d4f0ff'); c.fillStyle = g; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#ffffffcc'; for (const [x, y, s] of [[.16, .15, 1], [.75, .1, .8], [.59, .24, .6]]) { const X = x * w, Y = y * h; c.beginPath(); c.ellipse(X, Y, 60 * s, 22 * s, 0, 0, 7); c.ellipse(X + 35 * s, Y - 12 * s, 40 * s, 22 * s, 0, 0, 7); c.fill(); }
+    const g2 = c.createLinearGradient(0, gy, 0, h); g2.addColorStop(0, '#79c955'); g2.addColorStop(1, '#4e9b33'); c.fillStyle = g2;
+    c.beginPath(); c.moveTo(0, gy + 20); c.quadraticCurveTo(w / 2, gy - 15, w, gy + 20); c.lineTo(w, h); c.lineTo(0, h); c.fill(); return;
   }
   if (bg.type === 'night') {
-    const g = c.createLinearGradient(0, 0, 0, W); g.addColorStop(0, '#080c26'); g.addColorStop(1, '#3a2a6a'); c.fillStyle = g; c.fillRect(0, 0, W, W);
+    const g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#080c26'); g.addColorStop(1, '#3a2a6a'); c.fillStyle = g; c.fillRect(0, 0, w, h);
     let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
-    c.fillStyle = '#fff'; for (let i = 0; i < 90; i++) { c.globalAlpha = .3 + rnd() * .7; c.beginPath(); c.arc(rnd() * W, rnd() * W, rnd() * 1.8 + .4, 0, 7); c.fill(); }
-    c.globalAlpha = 1; c.fillStyle = '#fff6d6'; c.beginPath(); c.arc(660, 120, 42, 0, 7); c.fill();
-    c.fillStyle = '#080c26'; c.beginPath(); c.arc(678, 108, 38, 0, 7); c.fill();
+    c.fillStyle = '#fff'; for (let i = 0; i < 90 * w / 800; i++) { c.globalAlpha = .3 + rnd() * .7; c.beginPath(); c.arc(rnd() * w, rnd() * h, rnd() * 1.8 + .4, 0, 7); c.fill(); }
+    c.globalAlpha = 1; c.fillStyle = '#fff6d6'; c.beginPath(); c.arc(w - 140, 120, 42, 0, 7); c.fill();
+    c.fillStyle = '#080c26'; c.beginPath(); c.arc(w - 122, 108, 38, 0, 7); c.fill();
   }
 }
-function drawGroundShadow(c) {
-  const b = SH().box;
+function drawGroundShadow(c, b) {
+  const x = SHAPES[b.shape].box;
   c.save(); c.fillStyle = 'rgba(0,0,0,.2)'; c.filter = 'blur(6px)';
-  c.beginPath(); c.ellipse(b.x + b.w / 2, b.y + b.h + 16, b.w * .36, 16, 0, 0, Math.PI * 2); c.fill(); c.restore();
+  c.beginPath(); c.ellipse(x.x + x.w / 2, x.y + x.h + 16, x.w * .36, 16, 0, 0, Math.PI * 2); c.fill(); c.restore();
 }
-function drawShine(c) {
-  const b = SH().box;
-  c.save(); shapeClip(c);
-  const g = c.createRadialGradient(b.x + b.w * .5, b.y + b.h * .45, Math.min(b.w, b.h) * .25, b.x + b.w * .5, b.y + b.h * .5, Math.max(b.w, b.h) * .62);
+function drawShine(c, b) {
+  const x = SHAPES[b.shape].box;
+  c.save(); c.beginPath(); SHAPES[b.shape].path(c); c.clip();
+  const g = c.createRadialGradient(x.x + x.w * .5, x.y + x.h * .45, Math.min(x.w, x.h) * .25, x.x + x.w * .5, x.y + x.h * .5, Math.max(x.w, x.h) * .62);
   g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.28)');
-  c.fillStyle = g; c.fillRect(b.x, b.y, b.w, b.h);
-  const hx = b.x + b.w * .3, hy = b.y + b.h * .24;
-  const h = c.createRadialGradient(hx, hy, 4, hx, hy, Math.min(b.w, b.h) * .3);
+  c.fillStyle = g; c.fillRect(x.x, x.y, x.w, x.h);
+  // the light always comes from the top-left of the picture, even on a flipped ball
+  const hx = b.flip ? x.x + x.w * .7 : x.x + x.w * .3, hy = x.y + x.h * .24;
+  const h = c.createRadialGradient(hx, hy, 4, hx, hy, Math.min(x.w, x.h) * .3);
   h.addColorStop(0, 'rgba(255,255,255,.55)'); h.addColorStop(1, 'rgba(255,255,255,0)');
-  c.fillStyle = h; c.fillRect(b.x, b.y, b.w, b.h);
+  c.fillStyle = h; c.fillRect(x.x, x.y, x.w, x.h);
   c.restore();
 }
 
 /* ================== FLAG DRAWING ================== */
-function drawFlag(c) {
-  const f = state.flag, b = SH().box;
-  c.save(); shapeClip(c);
+function drawFlag(c, b) {
+  const f = b.flag, x = SHAPES[b.shape].box;
+  c.save(); c.beginPath(); SHAPES[b.shape].path(c); c.clip();
   c.fillStyle = f.img ? f.bg : '#ffffff';
-  c.fillRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
+  c.fillRect(x.x - 2, x.y - 2, x.w + 4, x.h + 4);
   if (f.img) {
     const iw = f.img.naturalWidth || f.img.width, ih = f.img.naturalHeight || f.img.height;
     const a = Math.abs(Math.sin((f.rot || 0) * Math.PI / 180));
-    const bw = b.w * (1 - a) + b.h * a, bh = b.h * (1 - a) + b.w * a;
+    const bw = x.w * (1 - a) + x.h * a, bh = x.h * (1 - a) + x.w * a;
     let s = f.mode === 'cover' ? Math.max(bw / iw, bh / ih) : Math.min(bw / iw, bh / ih);
     s *= f.zoom;
     c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
-    c.translate(b.x + b.w / 2 + f.ox * b.w / 2, b.y + b.h / 2 + f.oy * b.h / 2);
+    c.translate(x.x + x.w / 2 + f.ox * x.w / 2, x.y + x.h / 2 + f.oy * x.h / 2);
     c.rotate((f.rot || 0) * Math.PI / 180);
-    c.scale(f.fx ? -1 : 1, f.fy ? -1 : 1);
+    // a flipped ball still shows its flag the right way round (flags are not mirrored by turning around)
+    c.scale((f.fx ? -1 : 1) * (b.flip ? -1 : 1), f.fy ? -1 : 1);
     c.drawImage(f.img, -iw * s / 2, -ih * s / 2, iw * s, ih * s);
   }
   c.restore();
@@ -821,60 +853,85 @@ function placeFor(type) {
   return { type, x: a.x + (d.dx || 0) * R * f.s, y: a.y + (d.dy || 0) * R * f.s, s: f.s, rot: 0, flip: false };
 }
 
+
 function dims(s) { const d = STICKERS[s.type]; return d.dims ? d.dims(s) : { w: d.w, h: d.h }; }
-function drawSticker(c, s) {
+function drawSticker(c, s, ballFlipped) {
   const d = STICKERS[s.type]; if (!d) return;
-  c.save(); c.translate(s.x, s.y); c.rotate(s.rot);
+  c.save(); c.translate(s.x, s.y);
+  if (d.text && ballFlipped) { c.scale(-1, 1); c.rotate(-s.rot); } else c.rotate(s.rot); // keep text readable on a flipped ball
   c.scale(s.s * (s.flip && !d.text ? -1 : 1), s.s);
-  d.draw(c, s); c.restore();
+  d.draw(c, d.text && ballFlipped ? { ...s, flip: !s.flip } : s); c.restore();
 }
 function stBox(s) { const d = dims(s); return { w2: d.w * s.s / 2 + 8, h2: d.h * s.s / 2 + 8 }; }
 function toLocal(s, p) {
   const dx = p.x - s.x, dy = p.y - s.y, cs = Math.cos(-s.rot), sn = Math.sin(-s.rot);
   return { x: dx * cs - dy * sn, y: dx * sn + dy * cs };
 }
-function drawSelection(c, s) {
+const BLUE = '#2457e6';
+function handle(c, x, y, k) { c.beginPath(); c.arc(x, y, 15 * k, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill(); c.lineWidth = 4 * k; c.strokeStyle = BLUE; c.stroke(); }
+function drawSelection(c, s, k) {
   const { w2, h2 } = stBox(s);
   c.save(); c.translate(s.x, s.y); c.rotate(s.rot);
-  c.setLineDash([10, 7]); c.lineWidth = 3; c.strokeStyle = '#2457e6'; c.strokeRect(-w2, -h2, w2 * 2, h2 * 2);
-  c.setLineDash([]); c.beginPath(); c.moveTo(0, -h2); c.lineTo(0, -h2 - 40); c.stroke();
-  for (const [x, y] of [[w2, h2], [0, -h2 - 40]]) {
-    c.beginPath(); c.arc(x, y, 15, 0, Math.PI * 2); c.fillStyle = '#fff'; c.fill(); c.lineWidth = 4; c.strokeStyle = '#2457e6'; c.stroke();
-  }
+  c.setLineDash([10 * k, 7 * k]); c.lineWidth = 3 * k; c.strokeStyle = BLUE; c.strokeRect(-w2, -h2, w2 * 2, h2 * 2);
+  c.setLineDash([]); c.beginPath(); c.moveTo(0, -h2); c.lineTo(0, -h2 - 40 * k); c.stroke();
+  handle(c, w2, h2, k); handle(c, 0, -h2 - 40 * k, k);
+  c.restore();
+}
+function ballCorner(b) { const x = SHAPES[b.shape].box; return { x: x.x + x.w + 14, y: x.y + x.h + 14 }; }
+function drawBallSelection(c, b, dashedOnly) {
+  const k = 1 / b.s, x = SHAPES[b.shape].box;
+  c.save(); ballXf(c, b);
+  c.setLineDash([12 * k, 9 * k]); c.lineWidth = 3 * k; c.strokeStyle = BLUE;
+  c.strokeRect(x.x - 14, x.y - 14, x.w + 28, x.h + 28); c.setLineDash([]);
+  if (!dashedOnly) { const q = ballCorner(b); handle(c, q.x, q.y, k); }
   c.restore();
 }
 
 /* ================== RENDER ================== */
+function drawBall(c, b) {
+  c.save(); ballXf(c, b);
+  if (state.shading) drawGroundShadow(c, b);
+  drawFlag(c, b);
+  if (b.dv) c.drawImage(layerOf(b).cv, 0, 0);
+  if (state.shading) drawShine(c, b);
+  if (state.outline > 0) { c.beginPath(); SHAPES[b.shape].path(c); c.lineWidth = state.outline; c.lineJoin = 'round'; c.strokeStyle = INK; c.stroke(); }
+  b.stickers.forEach(s => drawSticker(c, s, b.flip));
+  c.restore();
+}
 function render(opts = {}) {
   const c = opts.ctx || ctx;
-  c.clearRect(0, 0, W, W);
+  c.clearRect(0, 0, SCW, SCH);
   drawBg(c, opts.bg || state.bg);
-  if (state.shading) drawGroundShadow(c);
-  drawFlag(c);
-  c.drawImage(drawCv, 0, 0);
-  if (state.shading) drawShine(c);
-  if (state.outline > 0) {
-    c.beginPath(); SH().path(c); c.lineWidth = state.outline; c.lineJoin = 'round'; c.strokeStyle = INK; c.stroke();
-  }
-  state.stickers.forEach(s => drawSticker(c, s));
+  state.balls.forEach(b => drawBall(c, b));
   if (opts.export) return;
-  if (mode() === 'move' && state.sel >= 0 && state.stickers[state.sel]) drawSelection(c, state.stickers[state.sel]);
-  if (hover && (mode() === 'pencil' || mode() === 'eraser')) {
+  const m = mode();
+  if (m === 'move') {
+    const sel = selSticker();
+    if (sel) { const b = ballById(state.sel.b); c.save(); ballXf(c, b); drawSelection(c, sel, 1 / b.s); c.restore(); }
+    else if (state.ballSel) drawBallSelection(c, active(), false);
+  } else if (state.balls.length > 1) drawBallSelection(c, active(), true); // show which ball you are drawing on
+  if (hover && (m === 'pencil' || m === 'eraser')) {
     c.beginPath(); c.arc(hover.x, hover.y, Math.max(2, state.size / 2), 0, Math.PI * 2);
-    c.lineWidth = 1.5; c.strokeStyle = mode() === 'eraser' ? '#e3242b' : '#555'; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]);
+    c.lineWidth = 1.5; c.strokeStyle = m === 'eraser' ? '#e3242b' : '#555'; c.setLineDash([4, 3]); c.stroke(); c.setLineDash([]);
   }
-  $('emptyHint').hidden = !!(state.flag.img || state.stickers.length || drawVer || state.bg.type !== 'none');
+  $('emptyHint').hidden = state.balls.length > 1 || state.bg.type !== 'none' || state.balls.some(b => b.flag.img || b.stickers.length || b.dv);
 }
 
-/* ================== HISTORY (UNDO/REDO) + AUTOSAVE ================== */
-const hist = []; let hi = -1, drawVer = 0, verCounter = 0;
+/* ================== HISTORY (UNDO/REDO) ================== */
+const hist = []; let hi = -1;
+const drawCache = {}; // ball id -> { dv, data } so unchanged drawings are shared between steps
+function drawData(b) {
+  if (!b.dv) return null;
+  const c = drawCache[b.id];
+  if (c && c.dv === b.dv) return c.data;
+  const data = layerOf(b).ctx.getImageData(0, 0, W, W);
+  drawCache[b.id] = { dv: b.dv, data };
+  return data;
+}
 function snap() {
-  const last = hist[hi];
   return {
-    ver: drawVer,
-    draw: (last && last.ver === drawVer) ? last.draw : dctx.getImageData(0, 0, W, W),
-    flag: { ...state.flag }, outline: state.outline, shape: state.shape, shading: state.shading, bg: { ...state.bg },
-    stickers: JSON.parse(JSON.stringify(state.stickers))
+    scene: state.scene, bg: { ...state.bg }, outline: state.outline, shading: state.shading, active: state.active,
+    balls: state.balls.map(b => ({ ...b, flag: { ...b.flag }, stickers: clone(b.stickers), draw: drawData(b) }))
   };
 }
 function pushHistory() {
@@ -883,94 +940,166 @@ function pushHistory() {
   hi = hist.length - 1; updateUndo(); scheduleSave();
 }
 function restoreSnap(s) {
-  dctx.putImageData(s.draw, 0, 0); drawVer = s.ver;
-  state.flag = { ...s.flag }; state.outline = s.outline; state.shading = s.shading; state.bg = { ...s.bg };
-  if (state.shape !== s.shape) { state.shape = s.shape; buildMask(); }
-  state.stickers = JSON.parse(JSON.stringify(s.stickers)); state.sel = -1;
+  if (s.scene !== state.scene) applySceneSize(s.scene);
+  state.bg = { ...s.bg }; state.outline = s.outline; state.shading = s.shading;
+  state.balls = s.balls.map(b => { const n = { ...b, flag: { ...b.flag }, stickers: clone(b.stickers) }; delete n.draw; return n; });
+  s.balls.forEach(b => { const L = layerOf(b); L.ctx.clearRect(0, 0, W, W); if (b.draw) { L.ctx.putImageData(b.draw, 0, 0); drawCache[b.id] = { dv: b.dv, data: b.draw }; } });
+  state.active = ballById(s.active) ? s.active : state.balls[0].id;
+  state.sel = null; state.ballSel = false;
   syncUI(); render(); scheduleSave();
 }
 function undo() { if (hi > 0) { hi--; restoreSnap(hist[hi]); updateUndo(); } }
 function redo() { if (hi < hist.length - 1) { hi++; restoreSnap(hist[hi]); updateUndo(); } }
 function updateUndo() { $('undoBtn').disabled = hi <= 0; $('redoBtn').disabled = hi >= hist.length - 1; }
-function markDraw() { drawVer = ++verCounter; }
 
-const SAVE_KEY = 'cbstudio-v2';
-let saveTimer = null, savedDrawVer = -1, savedDrawURL = '';
+/* ================== AUTOSAVE ================== */
+const SAVE_KEY = 'cbstudio-v3';
+let saveTimer = null; const saveURL = {};
 function scheduleSave() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700); }
 function saveNow() {
   try {
-    if (savedDrawVer !== drawVer) { savedDrawURL = drawVer ? drawCv.toDataURL('image/png') : ''; savedDrawVer = drawVer; }
-    const f = state.flag;
-    let custom = '';
-    if (f.img && f.code.startsWith('custom') && f.img.src && f.img.src.length < 1500000) custom = f.img.src;
-    localStorage.setItem(SAVE_KEY, JSON.stringify({
-      shape: state.shape, outline: state.outline, shading: state.shading, bg: state.bg,
-      flag: { code: f.img ? f.code : '', name: f.name, mode: f.mode, zoom: f.zoom, ox: f.ox, oy: f.oy, rot: f.rot, fx: f.fx, fy: f.fy, custom },
-      stickers: state.stickers, draw: savedDrawURL
-    }));
+    const balls = state.balls.map(b => {
+      let draw = '';
+      if (b.dv) { const c = saveURL[b.id]; if (c && c.dv === b.dv) draw = c.url; else { draw = layerOf(b).cv.toDataURL('image/png'); saveURL[b.id] = { dv: b.dv, url: draw }; } }
+      const f = b.flag; let custom = '';
+      if (f.img && f.code.startsWith('custom') && f.img.src && f.img.src.length < 1500000) custom = f.img.src;
+      return { shape: b.shape, x: b.x, y: b.y, s: b.s, flip: b.flip, moved: b.moved, stickers: b.stickers, draw,
+        flag: { code: f.img ? f.code : '', name: f.name, mode: f.mode, zoom: f.zoom, ox: f.ox, oy: f.oy, rot: f.rot, fx: f.fx, fy: f.fy, custom } };
+    });
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ scene: state.scene, outline: state.outline, shading: state.shading, bg: state.bg, active: state.balls.findIndex(b => b.id === state.active), balls }));
   } catch (e) { /* storage full or blocked */ }
 }
 function loadImg(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; }); }
 async function loadSaved() {
   let data = null;
   try { data = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
-  if (!data) return false;
+  if (!data) { // older single-ball save
+    try { const o = JSON.parse(localStorage.getItem('cbstudio-v2') || 'null'); if (o) data = { scene: 'square', outline: o.outline, shading: o.shading, bg: o.bg, active: 0, balls: [{ ...o, x: 400, y: 410, s: 1 }] }; } catch (e) {}
+  }
+  if (!data || !Array.isArray(data.balls) || !data.balls.length) return false;
   try {
-    if (SHAPES[data.shape]) state.shape = data.shape;
+    applySceneSize(SCENES[data.scene] ? data.scene : 'square');
     state.outline = data.outline ?? 8; state.shading = !!data.shading;
     if (data.bg && BGS[data.bg.type]) state.bg = { ...state.bg, ...data.bg };
-    state.stickers = Array.isArray(data.stickers) ? data.stickers.filter(s => STICKERS[s.type]) : [];
-    buildMask();
-    if (data.draw) { const im = await loadImg(data.draw); dctx.drawImage(im, 0, 0); markDraw(); }
-    const f = data.flag || {};
-    let img = null, bg = '#ffffff';
-    if (f.code && FLAG_SVG[f.code]) img = (await loadFlagImage({ code: f.code })).img;
-    else if (f.custom) img = await loadImg(f.custom);
-    if (img) bg = edgeColor(img);
-    state.flag = { img, name: f.name || '', code: img ? f.code : '', mode: f.mode || 'cover', zoom: f.zoom || 1, ox: f.ox || 0, oy: f.oy || 0, rot: f.rot || 0, fx: !!f.fx, fy: !!f.fy, bg };
-    return !!(img || state.stickers.length || data.draw);
+    state.balls = [];
+    for (const d of data.balls.slice(0, 12)) {
+      const b = makeBall({ shape: SHAPES[d.shape] ? d.shape : 'ball', x: +d.x || SCW / 2, y: +d.y || SCH / 2, s: +d.s || 1, flip: !!d.flip, moved: !!d.moved,
+        stickers: Array.isArray(d.stickers) ? d.stickers.filter(s => STICKERS[s.type]) : [] });
+      if (d.draw) { const im = await loadImg(d.draw); layerOf(b).ctx.drawImage(im, 0, 0); markDraw(b); }
+      const f = d.flag || {}; let img = null;
+      if (f.code && FLAG_SVG[f.code]) img = (await loadFlagImage({ code: f.code })).img;
+      else if (f.custom) img = await loadImg(f.custom);
+      b.flag = { ...newFlag(), ...f, img, code: img ? f.code : '', name: img ? (f.name || '') : '', bg: img ? edgeColor(img) : '#ffffff' };
+      delete b.flag.custom;
+      state.balls.push(b);
+    }
+    state.active = (state.balls[data.active] || state.balls[0]).id;
+    return state.balls.some(b => b.flag.img || b.stickers.length || b.dv) || state.balls.length > 1;
   } catch (e) { return false; }
 }
 
-function clearDrawings() { dctx.clearRect(0, 0, W, W); markDraw(); pushHistory(); render(); toast('Drawing cleared'); }
-function resetAll() {
-  dctx.clearRect(0, 0, W, W); drawVer = 0;
-  state.flag = { img: null, name: '', code: '', mode: 'cover', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' };
-  state.stickers = []; state.sel = -1; state.bg = { ...state.bg, type: 'none' }; state.shading = false; state.outline = 8;
-  if (state.shape !== 'ball') { state.shape = 'ball'; buildMask(); }
-  pushHistory(); syncUI(); render(); toast('Cleared. Pick a flag to start again');
+/* ================== BALLS: add, remove, arrange ================== */
+function autoArrange() {
+  const free = state.balls.filter(b => !b.moved), n = state.balls.length;
+  if (!free.length) return;
+  const s = Math.min(SCH / 800 * .95, (SCW / n) / 690, 1.2);
+  state.balls.forEach((b, i) => { if (b.moved) return; b.x = SCW * (i + .5) / n; b.y = SCH * .55; b.s = n === 1 ? SCH / 800 * (state.scene === 'wide' ? .9 : 1) : s; if (n === 1) b.y = SCH * (state.scene === 'wide' ? .52 : .5125); });
+  // in a pair, the balls look at each other
+  if (n === 2 && !state.balls[0].moved && !state.balls[1].moved) { state.balls[0].flip = false; state.balls[1].flip = true; }
+}
+function addBall(quiet) {
+  if (state.balls.length >= 8) { toast('8 balls is the limit'); return null; }
+  const b = makeBall();
+  state.balls.push(b); autoArrange();
+  state.active = b.id; state.sel = null; state.ballSel = true;
+  if (!quiet) { pushHistory(); syncUI(); render(); openTab('flag'); toast('New ball added. Pick its flag 🏳️'); }
+  return b;
+}
+function deleteBall(id) {
+  if (state.balls.length < 2) { toast('There has to be at least one ball'); return; }
+  state.balls = state.balls.filter(b => b.id !== id);
+  delete layers[id];
+  state.active = state.balls[state.balls.length - 1].id; state.sel = null; state.ballSel = false;
+  autoArrange(); pushHistory(); syncUI(); render();
+}
+function dupBall(b) {
+  if (state.balls.length >= 8) { toast('8 balls is the limit'); return; }
+  const n = makeBall({ ...clone({ ...b, flag: null }), flag: { ...b.flag }, id: undefined, dv: 0, moved: true, x: Math.min(SCW - 60, b.x + 60 * b.s), y: b.y });
+  n.id = ++ballSeq;
+  if (b.dv) { layerOf(n).ctx.drawImage(layerOf(b).cv, 0, 0); markDraw(n); }
+  state.balls.push(n); state.active = n.id; state.ballSel = true; state.sel = null;
+  pushHistory(); syncUI(); render();
+}
+function selectBall(id) { state.active = id; state.sel = null; state.ballSel = state.tab !== 'draw'; syncUI(); render(); }
+
+/* ================== PICTURE SIZE ================== */
+function applySceneSize(k) {
+  const old = { w: SCW, h: SCH }; state.scene = k; SCW = SCENES[k].w; SCH = SCENES[k].h;
+  cv.width = SCW; cv.height = SCH;
+  document.querySelector('.canvas-wrap').classList.toggle('wide', k === 'wide');
+  return old;
+}
+function setScene(k) {
+  if (k === state.scene) return;
+  const old = applySceneSize(k), r = Math.min(SCW / old.w, SCH / old.h);
+  state.balls.forEach(b => { b.x *= SCW / old.w; b.y *= SCH / old.h; b.s *= r; });
+  state.balls.forEach(b => b.moved = false); autoArrange();
+  pushHistory(); syncUI(); render();
+}
+
+/* ================== FLAG LOADING ================== */
+const imgCache = {};
+function loadFlagImage(item) {
+  return new Promise((res, rej) => {
+    if (item.img) return res({ img: item.img });
+    if (imgCache[item.code]) return res(imgCache[item.code]);
+    if (!FLAG_SVG[item.code]) return rej(new Error('missing'));
+    const im = new Image();
+    im.onload = () => {
+      const w = im.naturalWidth || 1500, h = im.naturalHeight || 1000;
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(im, 0, 0, w, h);
+      res(imgCache[item.code] = { img: c });
+    };
+    im.onerror = rej;
+    im.src = svgURL(item.code);
+  });
 }
 
 /* ================== DRAWING ================== */
 function pos(e) {
   const r = cv.getBoundingClientRect();
-  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * W / r.height };
+  return { x: (e.clientX - r.left) * SCW / r.width, y: (e.clientY - r.top) * SCH / r.height };
 }
-function strokeSeg(a, b) {
-  dctx.save();
+function strokeSeg(a, z) {
+  const b = active(), L = layerOf(b).ctx, p = toBall(b, a), q = toBall(b, z);
+  L.save();
   const erase = mode() === 'eraser';
-  if (state.clip && !erase) shapeClip(dctx);
-  dctx.globalCompositeOperation = erase ? 'destination-out' : 'source-over';
-  dctx.strokeStyle = dctx.fillStyle = state.color;
-  dctx.lineWidth = state.size; dctx.lineCap = 'round'; dctx.lineJoin = 'round';
-  if (a.x === b.x && a.y === b.y) { dctx.beginPath(); dctx.arc(a.x, a.y, state.size / 2, 0, Math.PI * 2); dctx.fill(); }
-  else { dctx.beginPath(); dctx.moveTo(a.x, a.y); dctx.lineTo(b.x, b.y); dctx.stroke(); }
-  dctx.restore();
+  if (state.clip && !erase) { L.beginPath(); SHAPES[b.shape].path(L); L.clip(); }
+  L.globalCompositeOperation = erase ? 'destination-out' : 'source-over';
+  L.strokeStyle = L.fillStyle = state.color;
+  const w = state.size / b.s;
+  L.lineWidth = w; L.lineCap = 'round'; L.lineJoin = 'round';
+  if (p.x === q.x && p.y === q.y) { L.beginPath(); L.arc(p.x, p.y, w / 2, 0, Math.PI * 2); L.fill(); }
+  else { L.beginPath(); L.moveTo(p.x, p.y); L.lineTo(q.x, q.y); L.stroke(); }
+  L.restore();
 }
 function hexToRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-function bucketFill(p) {
+function bucketFill(sp) {
+  const b = active(), p = toBall(b, sp);
   const x0 = Math.floor(p.x), y0 = Math.floor(p.y);
-  if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= W) return;
-  if (state.clip && !inShape(p)) { toast('Tap inside the shape to fill'); return; }
+  if (x0 < 0 || y0 < 0 || x0 >= W || y0 >= W || (state.clip && !inShapeLocal(b.shape, p))) {
+    toast(state.balls.length > 1 ? 'Tap inside the selected ball to fill' : 'Tap inside the shape to fill'); return;
+  }
   const tmp = document.createElement('canvas'); tmp.width = tmp.height = W;
   const tc = tmp.getContext('2d', { willReadFrequently: true });
-  drawFlag(tc); tc.drawImage(drawCv, 0, 0);
-  if (state.outline > 0) { tc.beginPath(); SH().path(tc); tc.lineWidth = state.outline; tc.lineJoin = 'round'; tc.strokeStyle = INK; tc.stroke(); }
-  const data = tc.getImageData(0, 0, W, W).data;
+  drawFlag(tc, b); if (b.dv) tc.drawImage(layerOf(b).cv, 0, 0);
+  if (state.outline > 0) { tc.beginPath(); SHAPES[b.shape].path(tc); tc.lineWidth = state.outline; tc.lineJoin = 'round'; tc.strokeStyle = INK; tc.stroke(); }
+  const data = tc.getImageData(0, 0, W, W).data, sm = maskOf(b.shape);
   const tol = state.tol, j0 = (y0 * W + x0) * 4;
   const t = [data[j0], data[j0 + 1], data[j0 + 2], data[j0 + 3]];
   const mask = new Uint8Array(W * W);
-  const inside = (x, y) => !state.clip || shapeMask[y * W + x] === 1;
+  const inside = (x, y) => !state.clip || sm[y * W + x] === 1;
   const match = (x, y) => {
     const j = (y * W + x) * 4;
     if (t[3] === 0) return data[j + 3] <= tol;
@@ -990,60 +1119,97 @@ function bucketFill(p) {
       sx++;
     }
   }
-  const img = dctx.getImageData(0, 0, W, W), o = img.data;
-  const [r, g, b] = hexToRgb(state.color);
+  const L = layerOf(b).ctx, img = L.getImageData(0, 0, W, W), o = img.data;
+  const [r, g, bl] = hexToRgb(state.color);
   let filled = 0;
   for (let y = 0; y < W; y++) for (let x = 0; x < W; x++) {
     const i = y * W + x;
     let on = mask[i];
     if (!on && inside(x, y)) on = (x > 0 && mask[i - 1]) || (x < W - 1 && mask[i + 1]) || (y > 0 && mask[i - W]) || (y < W - 1 && mask[i + W]);
-    if (on) { const j = i * 4; o[j] = r; o[j + 1] = g; o[j + 2] = b; o[j + 3] = 255; filled++; }
+    if (on) { const j = i * 4; o[j] = r; o[j + 1] = g; o[j + 2] = bl; o[j + 3] = 255; filled++; }
   }
   if (!filled) return;
-  dctx.putImageData(img, 0, 0); markDraw(); pushHistory(); render();
+  L.putImageData(img, 0, 0); markDraw(b); pushHistory(); render();
 }
 
 /* ================== POINTER ================== */
-let drawing = false, last = null, drag = null;
+let drawing = false, last = null, drag = null, hover = null;
+const selSticker = () => { if (!state.sel) return null; const b = ballById(state.sel.b); return b ? b.stickers[state.sel.i] || null : null; };
+function hitSticker(p) {
+  for (let bi = state.balls.length - 1; bi >= 0; bi--) {
+    const b = state.balls[bi], q = toBall(b, p);
+    for (let i = b.stickers.length - 1; i >= 0; i--) {
+      const st = b.stickers[i], l = toLocal(st, q), { w2, h2 } = stBox(st);
+      if (Math.abs(l.x) <= w2 && Math.abs(l.y) <= h2) return { b: b.id, i };
+    }
+  }
+  return null;
+}
+function hitBall(p) {
+  for (let bi = state.balls.length - 1; bi >= 0; bi--) { const b = state.balls[bi]; if (inShapeLocal(b.shape, toBall(b, p))) return b; }
+  return null;
+}
 cv.addEventListener('pointerdown', e => {
   const p = pos(e); cv.setPointerCapture(e.pointerId);
   const m = mode();
-  if (m === 'pencil' || m === 'eraser') { drawing = true; last = p; strokeSeg(p, p); render(); return; }
-  if (m === 'bucket') { bucketFill(p); return; }
-  const s = state.stickers[state.sel];
+  if (m === 'pencil' || m === 'eraser') {
+    // tapping another ball while drawing switches to that ball
+    if (state.balls.length > 1) { const hb = hitBall(p); if (hb && hb.id !== state.active) { state.active = hb.id; syncUI(); } }
+    drawing = true; last = p; strokeSeg(p, p); render(); return;
+  }
+  if (m === 'bucket') {
+    if (state.balls.length > 1) { const hb = hitBall(p); if (hb && hb.id !== state.active) { state.active = hb.id; syncUI(); } }
+    bucketFill(p); return;
+  }
+  // move mode: handles first, then stickers, then balls
+  const s = selSticker();
   if (s) {
-    const l = toLocal(s, p), { w2, h2 } = stBox(s);
-    if (Math.hypot(l.x - w2, l.y - h2) < 28) { drag = { mode: 'scale', s0: s.s, d0: Math.hypot(p.x - s.x, p.y - s.y), moved: false }; return; }
-    if (Math.hypot(l.x, l.y + h2 + 40) < 28) { drag = { mode: 'rot', r0: s.rot, a0: Math.atan2(p.y - s.y, p.x - s.x), moved: false }; return; }
+    const b = ballById(state.sel.b), q = toBall(b, p), l = toLocal(s, q), { w2, h2 } = stBox(s), k = 28 / b.s;
+    if (Math.hypot(l.x - w2, l.y - h2) < k) { drag = { mode: 'scale', s0: s.s, d0: Math.hypot(q.x - s.x, q.y - s.y), moved: false }; return; }
+    if (Math.hypot(l.x, l.y + h2 + 40 / b.s) < k) { drag = { mode: 'rot', r0: s.rot, a0: Math.atan2(q.y - s.y, q.x - s.x), moved: false }; return; }
+  } else if (state.ballSel) {
+    const b = active(), q = toBall(b, p), c = ballCorner(b);
+    if (Math.hypot(q.x - c.x, q.y - c.y) < 30 / b.s) { drag = { mode: 'bscale', s0: b.s, d0: Math.hypot(p.x - b.x, p.y - b.y), moved: false }; return; }
   }
-  let hit = -1;
-  for (let i = state.stickers.length - 1; i >= 0; i--) {
-    const st = state.stickers[i], l = toLocal(st, p), { w2, h2 } = stBox(st);
-    if (Math.abs(l.x) <= w2 && Math.abs(l.y) <= h2) { hit = i; break; }
+  const hs = hitSticker(p);
+  if (hs) {
+    state.sel = hs; state.ballSel = false; state.active = hs.b;
+    const b = ballById(hs.b), q = toBall(b, p), st = b.stickers[hs.i];
+    drag = { mode: 'move', ox: q.x - st.x, oy: q.y - st.y, moved: false };
+    syncUI(); render(); return;
   }
-  state.sel = hit;
-  if (hit >= 0) { const st = state.stickers[hit]; drag = { mode: 'move', ox: p.x - st.x, oy: p.y - st.y, moved: false }; }
-  syncSel(); render();
+  const hb = hitBall(p);
+  if (hb) {
+    state.sel = null; state.ballSel = true; state.active = hb.id;
+    // bring the touched ball to the front
+    drag = { mode: 'bmove', ox: p.x - hb.x, oy: p.y - hb.y, moved: false };
+    syncUI(); render(); return;
+  }
+  state.sel = null; state.ballSel = false; syncUI(); render();
 });
 cv.addEventListener('pointermove', e => {
   const p = pos(e); hover = p;
   if (drawing) { strokeSeg(last, p); last = p; render(); return; }
-  if (drag && state.sel >= 0) {
-    const s = state.stickers[state.sel]; drag.moved = true;
-    if (drag.mode === 'move') { s.x = p.x - drag.ox; s.y = p.y - drag.oy; }
-    else if (drag.mode === 'scale') { s.s = Math.min(5, Math.max(0.15, drag.s0 * Math.hypot(p.x - s.x, p.y - s.y) / Math.max(1, drag.d0))); }
-    else if (drag.mode === 'rot') { s.rot = drag.r0 + Math.atan2(p.y - s.y, p.x - s.x) - drag.a0; }
+  if (drag) {
+    drag.moved = true;
+    if (drag.mode === 'bmove') { const b = active(); b.x = p.x - drag.ox; b.y = p.y - drag.oy; b.moved = true; }
+    else if (drag.mode === 'bscale') { const b = active(); b.s = Math.min(2, Math.max(.15, drag.s0 * Math.hypot(p.x - b.x, p.y - b.y) / Math.max(1, drag.d0))); b.moved = true; }
+    else {
+      const s = selSticker(); if (!s) return;
+      const b = ballById(state.sel.b), q = toBall(b, p);
+      if (drag.mode === 'move') { s.x = q.x - drag.ox; s.y = q.y - drag.oy; }
+      else if (drag.mode === 'scale') { s.s = Math.min(5, Math.max(0.15, drag.s0 * Math.hypot(q.x - s.x, q.y - s.y) / Math.max(1, drag.d0))); }
+      else if (drag.mode === 'rot') { s.rot = drag.r0 + Math.atan2(q.y - s.y, q.x - s.x) - drag.a0; }
+    }
     render(); return;
   }
   const m = mode();
-  if (m === 'move') {
-    const over = state.stickers.some(st => { const l = toLocal(st, p), b = stBox(st); return Math.abs(l.x) <= b.w2 && Math.abs(l.y) <= b.h2; });
-    cv.style.cursor = over ? 'move' : 'default';
-  } else cv.style.cursor = m === 'bucket' ? 'cell' : 'crosshair';
+  if (m === 'move') cv.style.cursor = (hitSticker(p) || hitBall(p)) ? 'move' : 'default';
+  else cv.style.cursor = m === 'bucket' ? 'cell' : 'crosshair';
   render();
 });
 const endPointer = () => {
-  if (drawing) { drawing = false; markDraw(); pushHistory(); }
+  if (drawing) { drawing = false; markDraw(active()); pushHistory(); }
   if (drag) { if (drag.moved) pushHistory(); drag = null; }
 };
 cv.addEventListener('pointerup', endPointer);
@@ -1056,16 +1222,23 @@ const TIPS = {
   eyes: 'Tap eyes to add them. Drag on the picture to move · corner dot resizes · top dot turns.',
   addons: 'Tap to add. Drag on the picture to move · corner dot resizes · top dot turns.',
   draw: 'Draw right on the picture. Undo with ↶ if you slip.',
-  style: 'Change the background, outline and shine.',
+  style: 'Change the background, picture size, outline and shine.',
+};
+const TIPS_MULTI = {
+  flag: 'Tap a country to paint the selected ball. Tap a ball in the picture to select it.',
+  eyes: 'Eyes go on the selected ball. Tap a ball in the picture to select it.',
+  addons: 'Hats and text go on the selected ball. Tap a ball in the picture to select it.',
+  draw: 'You draw on the selected ball (dashed box). Tap another ball to switch.',
+  style: 'Change the background, picture size, outline and shine.',
 };
 function openTab(t) {
   state.tab = t;
   document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'page-' + t));
-  if (t === 'draw') state.sel = -1;
-  $('tip').textContent = TIPS[t];
-  syncSel(); render();
+  if (t === 'draw') { state.sel = null; state.ballSel = false; }
+  syncTip(); syncSel(); render();
 }
+function syncTip() { $('tip').textContent = (state.balls.length > 1 ? TIPS_MULTI : TIPS)[state.tab]; }
 document.querySelectorAll('.tab').forEach(b => b.onclick = () => openTab(b.dataset.tab));
 
 /* ================== SHAPES ROW ================== */
@@ -1081,14 +1254,34 @@ for (const [k, sh] of Object.entries(SHAPES)) {
   b.onclick = () => setShape(k);
   $('shapes').appendChild(b);
 }
-function setShape(k, quiet) {
-  if (state.shape === k) return;
-  const from = SH(), to = SHAPES[k];
-  state.stickers.forEach(s => {
-    const hat = STICKERS[s.type].group === 'hat', a = anchor(from, hat), b = anchor(to, hat), r = to.face.s / from.face.s;
-    s.x = b.x + (s.x - a.x) * r; s.y = b.y + (s.y - a.y) * r; s.s *= r;
+function setShape(k, quiet, ball) {
+  const b = ball || active();
+  if (b.shape === k) return;
+  const from = SHAPES[b.shape], to = SHAPES[k];
+  b.stickers.forEach(s => {
+    const hat = STICKERS[s.type].group === 'hat', a = anchor(from, hat), z = anchor(to, hat), r = to.face.s / from.face.s;
+    s.x = z.x + (s.x - a.x) * r; s.y = z.y + (s.y - a.y) * r; s.s *= r;
   });
-  state.shape = k; buildMask(); if (!quiet) pushHistory(); syncUI(); render();
+  b.shape = k; if (!quiet) { pushHistory(); syncUI(); render(); }
+}
+
+/* ================== BALLS ROW ================== */
+function renderBallsRow() {
+  const row = $('ballsRow'); row.innerHTML = '';
+  state.balls.forEach((b, i) => {
+    const el = document.createElement('button'); el.className = 'bchip' + (b.id === state.active ? ' on' : '');
+    el.title = 'Select this ball';
+    if (b.flag.code && FLAG_SVG[b.flag.code]) { const im = document.createElement('img'); im.src = svgURL(b.flag.code); im.alt = ''; el.appendChild(im); }
+    else { const d = document.createElement('i'); d.className = 'dot'; el.appendChild(d); }
+    const sp = document.createElement('span'); sp.textContent = b.flag.name || `Ball ${i + 1}`; el.appendChild(sp);
+    el.onclick = () => selectBall(b.id);
+    row.appendChild(el);
+  });
+  if (state.balls.length < 8) {
+    const add = document.createElement('button'); add.className = 'bchip add'; add.textContent = '+ Add ball';
+    add.title = 'Put another countryball in the picture'; add.onclick = () => addBall();
+    row.appendChild(add);
+  }
 }
 
 /* ================== DRAW PAGE ================== */
@@ -1116,6 +1309,11 @@ for (const [k, b] of Object.entries(BGS)) {
   ch.innerHTML = `<i style="background:${b.sw || state.bg.color}"></i>${b.name}`;
   ch.onclick = () => { if (k === 'color') $('bgColor').click(); state.bg.type = k; pushHistory(); syncUI(); render(); };
   $('bgChips').appendChild(ch);
+}
+for (const [k, sc] of Object.entries(SCENES)) {
+  const ch = document.createElement('button'); ch.className = 'chip plain'; ch.dataset.scene = k; ch.textContent = sc.name;
+  ch.onclick = () => setScene(k);
+  $('sceneChips').appendChild(ch);
 }
 $('bgColor').oninput = e => { state.bg.color = e.target.value; state.bg.type = 'color'; syncUI(); render(); };
 $('bgColor').onchange = () => pushHistory();
@@ -1154,9 +1352,10 @@ function renderList() {
   const list = countries.filter(c => !q || norm(c.name).includes(q) || c.code === q || (ALIASES[c.code] || '').includes(q));
   const g = $('flagGrid'); g.innerHTML = '';
   const frag = document.createDocumentFragment();
+  const cur = state.balls.length ? active().flag.code : '';
   list.forEach(c => {
     const b = document.createElement('button'); b.className = 'fi'; b.title = c.name; b.dataset.code = c.code;
-    if (state.flag.code === c.code) b.classList.add('on');
+    if (cur === c.code) b.classList.add('on');
     const im = document.createElement('img'); im.loading = 'lazy'; im.alt = ''; im.src = svgURL(c.code);
     const sp = document.createElement('span'); sp.textContent = c.name;
     b.append(im, sp); b.onclick = () => applyFlag(c);
@@ -1186,46 +1385,34 @@ function renderRecent() {
     box.appendChild(b);
   });
 }
-const imgCache = {};
-function loadFlagImage(item) {
-  return new Promise((res, rej) => {
-    if (item.img) return res({ img: item.img });
-    if (imgCache[item.code]) return res(imgCache[item.code]);
-    if (!FLAG_SVG[item.code]) return rej(new Error('missing'));
-    const im = new Image();
-    im.onload = () => {
-      const w = im.naturalWidth || 1500, h = im.naturalHeight || 1000;
-      const c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(im, 0, 0, w, h);
-      res(imgCache[item.code] = { img: c });
-    };
-    im.onerror = rej;
-    im.src = svgURL(item.code);
-  });
-}
-async function applyFlag(item, silent) {
+async function applyFlag(item, silent, ball) {
+  const b = ball || active();
   try {
     const { img } = await loadFlagImage(item);
-    state.flag = { img, name: item.name, code: item.code, mode: $('fMode').value, zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: edgeColor(img) };
+    b.flag = { ...newFlag(), img, name: item.name, code: item.code, mode: $('fMode').value, bg: edgeColor(img) };
     addRecent(item.code);
-    document.querySelectorAll('.fi').forEach(b => b.classList.toggle('on', b.dataset.code === item.code));
-    if (!silent) { pushHistory(); toast(`${item.name} ✔  Next: add eyes 👀`); }
+    if (!silent) {
+      pushHistory();
+      const empty = !b.stickers.some(s => STICKERS[s.type].group === 'eye');
+      toast(empty ? `${item.name} ✔  Next: add eyes 👀` : `${item.name} ✔`);
+    }
     syncUI(); render();
   } catch (e) { toast('This flag did not load. Try another one.'); }
 }
-function centerFlag() { if (!state.flag.img) return; Object.assign(state.flag, { zoom: 1, ox: 0, oy: 0, rot: 0 }); pushHistory(); syncUI(); render(); }
-function removeFlag() { if (!state.flag.img) return; state.flag = { ...state.flag, img: null, name: '', code: '', zoom: 1, ox: 0, oy: 0, rot: 0, fx: false, fy: false, bg: '#ffffff' }; pushHistory(); syncUI(); render(); renderList(); }
+function centerFlag() { const f = active().flag; if (!f.img) return; Object.assign(f, { zoom: 1, ox: 0, oy: 0, rot: 0 }); pushHistory(); syncUI(); render(); }
+function removeFlag(ball) { const b = ball || active(); if (!b.flag.img) return; b.flag = newFlag(); pushHistory(); syncUI(); render(); }
 function flipFlag(axis) {
-  if (!state.flag.img) { toast('Pick a flag first'); return; }
-  if (axis === 'y') state.flag.fy = !state.flag.fy; else state.flag.fx = !state.flag.fx;
+  const f = active().flag;
+  if (!f.img) { toast('Pick a flag first'); return; }
+  if (axis === 'y') f.fy = !f.fy; else f.fx = !f.fx;
   pushHistory(); render();
 }
-$('fMode').onchange = e => { state.flag.mode = e.target.value; if (state.flag.img) pushHistory(); render(); };
-$('fZoom').oninput = e => { state.flag.zoom = e.target.value / 100; $('fZoomV').textContent = e.target.value + '%'; render(); };
-$('fRot').oninput = e => { state.flag.rot = +e.target.value; $('fRotV').textContent = e.target.value + '°'; render(); };
-$('fX').oninput = e => { state.flag.ox = e.target.value / 100; $('fXV').textContent = e.target.value; render(); };
-$('fY').oninput = e => { state.flag.oy = e.target.value / 100; $('fYV').textContent = e.target.value; render(); };
-['fZoom', 'fRot', 'fX', 'fY'].forEach(id => $(id).onchange = () => { if (state.flag.img) pushHistory(); });
+$('fMode').onchange = e => { const f = active().flag; f.mode = e.target.value; if (f.img) pushHistory(); render(); };
+$('fZoom').oninput = e => { active().flag.zoom = e.target.value / 100; $('fZoomV').textContent = e.target.value + '%'; render(); };
+$('fRot').oninput = e => { active().flag.rot = +e.target.value; $('fRotV').textContent = e.target.value + '°'; render(); };
+$('fX').oninput = e => { active().flag.ox = e.target.value / 100; $('fXV').textContent = e.target.value; render(); };
+$('fY').oninput = e => { active().flag.oy = e.target.value / 100; $('fYV').textContent = e.target.value; render(); };
+['fZoom', 'fRot', 'fX', 'fY'].forEach(id => $(id).onchange = () => { if (active().flag.img) pushHistory(); });
 $('upload').onchange = e => {
   const f = e.target.files[0]; if (!f) return;
   const rd = new FileReader();
@@ -1249,62 +1436,84 @@ function buildStickerButtons() {
   }
 }
 function addSticker(type, opts) {
+  const b = active();
   const s = { ...placeFor(type), ...(opts || {}) };
-  state.stickers.push(s); state.sel = state.stickers.length - 1;
+  b.stickers.push(s); state.sel = { b: b.id, i: b.stickers.length - 1 }; state.ballSel = false;
   pushHistory(); syncSel(); render();
   return s;
 }
+// text should stay readable on a small ball
+const textScale = b => .9 * Math.min(1.6, Math.max(1, .75 / b.s));
 function addText(kind) {
-  const f = SH().face, b = SH().box;
-  if (kind === 'bubble') addSticker('bubble', { text: 'Hello!', x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: .9 });
-  else addSticker('plain', { text: 'Your text', x: f.x, y: Math.min(760, b.y + b.h + 50), s: .9, color: '#1b1d24' });
+  const f = SH().face, x = SH().box, ts = textScale(active());
+  if (kind === 'bubble') addSticker('bubble', { text: 'Hello!', x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: ts });
+  else addSticker('plain', { text: 'Your text', x: f.x, y: Math.min(760, x.y + x.h + 50), s: ts, color: '#1b1d24' });
   $('selText').focus(); $('selText').select();
 }
 function syncSel() {
-  const s = mode() === 'move' ? state.stickers[state.sel] : null;
-  $('selbar').hidden = !s;
-  if (!s) return;
-  const d = STICKERS[s.type];
-  $('selName').textContent = d.name;
-  $('selText').hidden = !d.text;
-  $('selColor').hidden = s.type !== 'plain';
-  if (d.text && document.activeElement !== $('selText')) $('selText').value = s.text || '';
-  if (s.type === 'plain') $('selColor').value = s.color || '#1b1d24';
+  const s = mode() === 'move' ? selSticker() : null;
+  const ballMode = !s && mode() === 'move' && state.ballSel;
+  $('selbar').hidden = !s && !ballMode;
+  const d = s ? STICKERS[s.type] : null;
+  $('selName').textContent = s ? d.name : `${active().flag.name || 'Ball'}`;
+  $('selText').hidden = !(d && d.text);
+  $('selColor').hidden = !(s && s.type === 'plain');
+  if (d && d.text && document.activeElement !== $('selText')) $('selText').value = s.text || '';
+  if (s && s.type === 'plain') $('selColor').value = s.color || '#1b1d24';
+  document.querySelectorAll('#selbar [data-ball-only]').forEach(el => el.hidden = !ballMode);
+  const del = $('selbar').querySelector('.warn'); if (del) del.hidden = ballMode && state.balls.length < 2;
 }
-$('selText').oninput = e => { const s = state.stickers[state.sel]; if (s && STICKERS[s.type].text) { s.text = e.target.value; render(); } };
+$('selText').oninput = e => { const s = selSticker(); if (s && STICKERS[s.type].text) { s.text = e.target.value; render(); } };
 $('selText').onchange = () => pushHistory();
-$('selColor').oninput = e => { const s = state.stickers[state.sel]; if (s) { s.color = e.target.value; render(); } };
+$('selColor').oninput = e => { const s = selSticker(); if (s) { s.color = e.target.value; render(); } };
 $('selColor').onchange = () => pushHistory();
 function stAction(a) {
-  const i = state.sel, s = state.stickers[i]; if (!s) return;
+  const s = selSticker();
+  if (!s) { // a ball is selected
+    if (!state.ballSel) return;
+    const b = active();
+    if (a === 'flip') b.flip = !b.flip;
+    if (a === 'bigger') { b.s = Math.min(2, b.s * 1.15); b.moved = true; }
+    if (a === 'smaller') { b.s = Math.max(.15, b.s / 1.15); b.moved = true; }
+    if (a === 'front') { state.balls = state.balls.filter(x => x !== b).concat(b); }
+    if (a === 'dup') { dupBall(b); return; }
+    if (a === 'del') { deleteBall(b.id); return; }
+    pushHistory(); syncUI(); render(); return;
+  }
+  const b = ballById(state.sel.b), i = state.sel.i;
   if (a === 'flip') s.flip = !s.flip;
   if (a === 'bigger') s.s = Math.min(5, s.s * 1.15);
   if (a === 'smaller') s.s = Math.max(.15, s.s / 1.15);
-  if (a === 'front') { state.stickers.splice(i, 1); state.stickers.push(s); state.sel = state.stickers.length - 1; }
-  if (a === 'dup') { state.stickers.push({ ...s, x: s.x + 25, y: s.y + 25 }); state.sel = state.stickers.length - 1; }
-  if (a === 'del') { state.stickers.splice(i, 1); state.sel = -1; }
+  if (a === 'front') { b.stickers.splice(i, 1); b.stickers.push(s); state.sel.i = b.stickers.length - 1; }
+  if (a === 'dup') { b.stickers.push({ ...s, x: s.x + 25, y: s.y + 25 }); state.sel.i = b.stickers.length - 1; }
+  if (a === 'del') { b.stickers.splice(i, 1); state.sel = null; }
   pushHistory(); syncSel(); render();
 }
 
 /* ================== RANDOM ================== */
-async function randomBall() {
-  if (!countries.length) return;
-  const pick = a => a[Math.random() * a.length | 0];
-  const c = pick(countries);
-  dctx.clearRect(0, 0, W, W); markDraw();
-  state.stickers = []; state.sel = -1;
-  await applyFlag(c, true);
+const pick = a => a[Math.random() * a.length | 0];
+async function randomizeBall(b) {
   const eyes = Object.keys(STICKERS).filter(k => STICKERS[k].group === 'eye');
   const hats = Object.keys(STICKERS).filter(k => STICKERS[k].group === 'hat');
-  state.stickers.push(placeFor(pick(eyes)));
-  if (Math.random() < .4) state.stickers.push(placeFor(pick(hats)));
+  layerOf(b).ctx.clearRect(0, 0, W, W); b.dv = 0;
+  b.stickers = [];
+  await applyFlag(pick(countries), true, b);
+  const keep = state.active; state.active = b.id;
+  b.stickers.push(placeFor(pick(eyes)));
+  if (Math.random() < .4) b.stickers.push(placeFor(pick(hats)));
+  state.active = keep;
+}
+async function randomBall() {
+  if (!countries.length) return;
+  state.sel = null; state.ballSel = false;
+  for (const b of state.balls) await randomizeBall(b);
   pushHistory(); syncUI(); render();
-  toast(`🎲 ${c.name}!`);
+  toast('🎲 ' + state.balls.map(b => b.flag.name).join(' & ') + '!');
 }
 
 /* ================== UI SYNC ================== */
 function syncUI() {
-  const f = state.flag;
+  const b = active(), f = b.flag;
   $('fMode').value = f.mode;
   $('fZoom').value = Math.round(f.zoom * 100); $('fZoomV').textContent = Math.round(f.zoom * 100) + '%';
   $('fRot').value = f.rot || 0; $('fRotV').textContent = (f.rot || 0) + '°';
@@ -1312,23 +1521,24 @@ function syncUI() {
   $('fY').value = Math.round(f.oy * 100); $('fYV').textContent = Math.round(f.oy * 100);
   $('outline').value = state.outline; $('outlineV').textContent = state.outline;
   $('shading').checked = state.shading;
-  document.querySelectorAll('.shape').forEach(b => { const on = b.dataset.shape === state.shape; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-  document.querySelectorAll('#bgChips .chip').forEach(b => {
-    b.classList.toggle('on', b.dataset.bg === state.bg.type);
-    if (b.dataset.bg === 'color') b.querySelector('i').style.background = state.bg.color;
+  document.querySelectorAll('.shape').forEach(x => { const on = x.dataset.shape === b.shape; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('#bgChips .chip').forEach(x => {
+    x.classList.toggle('on', x.dataset.bg === state.bg.type);
+    if (x.dataset.bg === 'color') x.querySelector('i').style.background = state.bg.color;
   });
-  document.querySelectorAll('.fi').forEach(b => b.classList.toggle('on', b.dataset.code === f.code));
-  syncSel();
+  document.querySelectorAll('#sceneChips .chip').forEach(x => x.classList.toggle('on', x.dataset.scene === state.scene));
+  document.querySelectorAll('.fi').forEach(x => x.classList.toggle('on', x.dataset.code === f.code));
+  renderBallsRow(); syncTip(); syncSel();
 }
 
 /* ================== EXPORT ================== */
-const EX_SIZES = [[800, 'Normal'], [1600, 'HD'], [2400, 'Extra large']];
-let exSize = 1600, exBg = 'scene';
+const EX_SIZES = [[1, 'Normal'], [2, 'HD'], [3, 'Extra large']];
+let exK = 2, exBg = 'scene';
 function buildExportChips() {
   $('sizeChips').innerHTML = ''; $('exBgChips').innerHTML = '';
-  EX_SIZES.forEach(([px, n]) => {
-    const b = document.createElement('button'); b.className = 'chip plain' + (exSize === px ? ' on' : '');
-    b.textContent = `${n} (${px}px)`; b.onclick = () => { exSize = px; buildExportChips(); };
+  EX_SIZES.forEach(([k, n]) => {
+    const b = document.createElement('button'); b.className = 'chip plain' + (exK === k ? ' on' : '');
+    b.textContent = `${n} (${SCW * k}×${SCH * k})`; b.onclick = () => { exK = k; buildExportChips(); };
     $('sizeChips').appendChild(b);
   });
   const opts = state.bg.type === 'none'
@@ -1350,13 +1560,16 @@ function openExport() {
 function closeExport() { $('exportModal').classList.remove('on'); }
 function makeBlob() {
   return new Promise((res, rej) => {
-    const k = exSize / W, t = document.createElement('canvas'); t.width = t.height = exSize;
-    const c = t.getContext('2d'); c.scale(k, k);
+    const t = document.createElement('canvas'); t.width = SCW * exK; t.height = SCH * exK;
+    const c = t.getContext('2d'); c.scale(exK, exK);
     render({ ctx: c, export: true, bg: exBg === 'scene' ? state.bg : { type: exBg } });
     try { t.toBlob(b => b ? res(b) : rej(new Error('blob')), 'image/png'); } catch (e) { rej(e); }
   });
 }
-function fileName() { return `countryball-${(state.flag.name || 'design').replace(/\s+/g, '-').toLowerCase()}.png`; }
+function fileName() {
+  const n = state.balls.map(b => b.flag.name).filter(Boolean).join('-') || 'design';
+  return `countryball-${n.replace(/\s+/g, '-').toLowerCase()}.png`;
+}
 async function doExport(how) {
   let blob;
   try { blob = await makeBlob(); } catch (e) { toast('Saving failed. Try a different flag or image.'); return; }
@@ -1383,12 +1596,13 @@ async function doExport(how) {
 /* ================== HELPER BOT ("Bally") ==================
    Works offline, nothing leaves the page. Bally does two things:
    1) answers "how do I…" questions (BOT list below)
-   2) understands requests like "japan with angry eyes and a crown" and does them. */
+   2) understands requests like "germany and france with angry eyes" and does them. */
 const BOT = [
   { k: /\bhello|\bhi\b|\bhey\b|\byo\b|merhaba|selam/, a: 'Hi! Ask me how anything works, or just tell me what to make, like "Brazil with happy eyes and a top hat".' },
   { k: /who are you|your name|what are you/, a: 'I\'m Bally, the helper of Countryball Studio. I explain things and I can build countryballs for you. Try "Poland upside down with sad eyes".' },
   { k: /who made|creator|author|developer/, a: 'Countryball Studio is made by inançX.' },
   { k: /what.*countryball|countryball (is|nedir)|polandball/, a: 'Countryballs are round characters painted with a country\'s flag. They come from Polandball comics, where countries act out history and jokes.' },
+  { k: /two balls|more balls|another ball|second ball|several|multiple|many balls|more than one|iki|birden|comic|together/, a: 'Press "+ Add ball" under the picture. Every ball gets its own flag, eyes and hats. Tap a ball in the picture to select it, drag to move it, use the corner dot to resize, and ⇋ Flip so they look at each other. For a comic panel, switch to Wide in the Style tab.\nOr tell me: "Germany and France with angry eyes".', act: ['addball', 'Add a ball'] },
   { k: /delete|remove|\bsil(\b|er|me|in|ey)|kaldır/, a: 'Tap the item on the picture to select it, then press 🗑 Delete in the bar under the picture (or the Delete key). To remove the flag: Flag options → Remove flag.\nYou can also tell me: "remove the hat".' },
   { k: /upside|reverse|flip.*flag|ters|baş aşağı/, a: 'Flag tab → "Flag options" → Upside down. That\'s the classic Polandball look. "Mirror" flips it left to right.\nOr tell me: "upside down".', act: ['flagmore', 'Show flag options'] },
   { k: /\bown\b|upload|my (image|flag|picture)|custom|kendi|resim/, a: 'Open "Flag options" in the Flag tab and press "Use my own image". Any picture works.', act: ['flagmore', 'Show flag options'] },
@@ -1426,11 +1640,12 @@ const WORDS = {
 };
 const SHAPE_WORDS = { ball: 'ball,sphere,round', cube: 'cube,square,box', tri: 'triangle,tringapore', brick: 'brick,rectangle,reichtangle' };
 const BG_WORDS = { sky: 'sky,blue sky,sky background', night: 'night,night sky', grass: 'meadow,grass,field', white: 'white background', none: 'transparent,no background' };
-const QUICK = ['How do I start?', 'Japan with a crown', 'Make a random one', 'Upside-down flag', 'Download'];
+const QUICK = ['How do I start?', 'Germany and France', 'Japan with a crown', 'Make a random one', 'Download'];
+
 
 const esc = t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const has = (t, phrase) => new RegExp('(^|[^a-z0-9])' + esc(phrase) + '($|[^a-z0-9])').test(t);
-function findBest(t, table) { // table: [[id, 'a,b,c']] → id of the longest phrase found in t
+function findBest(t, table) {
   let best = null, len = 0;
   for (const [id, list] of table) for (const ph of list.split(',')) { const p = ph.trim(); if (p && p.length > len && has(t, p)) { best = id; len = p.length; } }
   return best;
@@ -1440,15 +1655,24 @@ function findAll(t, table) {
   for (const [id, list] of table) if (list.split(',').some(p => has(t, p.trim()))) out.push(id);
   return out;
 }
-function findCountry(t) {
-  let best = null, score = 0;
+// every country named in the text, in the order they appear
+function findCountries(t) {
+  const hits = [];
   for (const c of countries) {
-    const names = [[norm(c.name).replace(/ - .*/, ''), .5], [norm(c.name), .6], ...(ALIASES[c.code] || '').split(',').filter(Boolean).map(a => [a, 0])];
-    for (const [n, bonus] of names) if (n.length > 2 && n.length + bonus > score && has(t, n)) { best = c; score = n.length + bonus; }
+    const names = [norm(c.name).replace(/ - .*/, ''), norm(c.name), ...(ALIASES[c.code] || '').split(',').filter(Boolean)];
+    for (const n of names) {
+      if (n.length < 3) continue;
+      const re = new RegExp('(^|[^a-z0-9])(' + esc(n) + ')(?=$|[^a-z0-9])', 'g'); let m;
+      while ((m = re.exec(t))) { const start = m.index + m[1].length; hits.push({ c, start, end: start + n.length, len: n.length }); }
+    }
   }
-  return best;
+  hits.sort((a, b) => b.len - a.len);
+  const taken = [];
+  for (const h of hits) if (!taken.some(x => h.start < x.end && x.start < h.end) && !taken.some(x => x.c === h.c)) taken.push(h);
+  return taken.sort((a, b) => a.start - b.start).map(h => h.c);
 }
-function removeGroup(group) { const n = state.stickers.length; state.stickers = state.stickers.filter(s => STICKERS[s.type].group !== group); return n - state.stickers.length; }
+function removeGroup(b, group) { const n = b.stickers.length; b.stickers = b.stickers.filter(s => STICKERS[s.type].group !== group); return n - b.stickers.length; }
+function putSticker(b, id) { const keep = state.active; state.active = b.id; const s = placeFor(id); state.active = keep; b.stickers.push(s); }
 
 async function botCommand(raw) {
   // quoted text is for the speech bubble, so don't read commands inside it
@@ -1456,48 +1680,77 @@ async function botCommand(raw) {
   const done = [];
   const removing = /\b(remove|delete|without|take off|get rid of|no more|clear the)\b/.test(t);
 
-  if (/\b(start over|reset everything|clear everything|new one|blank)\b/.test(t)) { resetAll(); return ['Cleared everything']; }
-  if (/\b(random|surprise me|anything|whatever)\b/.test(t) && !findCountry(t)) { await randomBall(); return ['Made a random countryball: ' + state.flag.name]; }
+  if (/\b(start over|reset everything|clear everything|blank)\b/.test(t)) { resetAll(); return ['Cleared everything']; }
+  if (/\b(wide|comic|landscape)\b/.test(t) && /\b(picture|size|make it|switch|canvas|panel)\b/.test(t)) { setScene('wide'); done.push('Wide picture'); }
+  if (/\bsquare\b/.test(t) && /\b(picture|size|make it|switch|canvas)\b/.test(t)) { setScene('square'); done.push('Square picture'); }
 
-  const stickerIds = findAll(t, Object.entries(WORDS));
+  const named = findCountries(t);
+  if (/\b(random|surprise me|anything|whatever)\b/.test(t) && !named.length) { await randomBall(); return ['Made a random countryball: ' + state.balls.map(b => b.flag.name).join(' & ')]; }
+
   if (removing) {
-    let n = 0;
-    if (/\beyes?\b/.test(t)) { n += removeGroup('eye'); }
-    if (/\bhats?\b/.test(t)) { n += removeGroup('hat'); }
-    if (/\b(text|bubble|speech)\b/.test(t)) { n += removeGroup('text'); }
-    if (/\bflag\b/.test(t) && state.flag.img) { removeFlag(); done.push('Removed the flag'); }
-    if (/\b(everything|all stickers|all)\b/.test(t)) { n += state.stickers.length; state.stickers = []; }
-    stickerIds.forEach(id => { const before = state.stickers.length; state.stickers = state.stickers.filter(s => s.type !== id); n += before - state.stickers.length; });
-    state.sel = -1;
+    if (/\bballs?\b/.test(t) && state.balls.length > 1) { deleteBall(state.active); return ['Removed the selected ball']; }
+    const b = active(); let n = 0;
+    const ids = findAll(t, Object.entries(WORDS));
+    if (/\beyes?\b/.test(t)) n += removeGroup(b, 'eye');
+    if (/\bhats?\b/.test(t)) n += removeGroup(b, 'hat');
+    if (/\b(text|bubble|speech)\b/.test(t)) n += removeGroup(b, 'text');
+    if (/\bflag\b/.test(t) && b.flag.img) { removeFlag(b); done.push('Removed the flag'); }
+    if (/\b(everything|all)\b/.test(t)) { n += b.stickers.length; b.stickers = []; }
+    ids.forEach(id => { const before = b.stickers.length; b.stickers = b.stickers.filter(s => s.type !== id); n += before - b.stickers.length; });
+    state.sel = null;
     if (n) done.push(`Removed ${n} item${n > 1 ? 's' : ''}`);
     if (done.length) { pushHistory(); syncUI(); render(); }
     return done;
   }
 
-  const country = findCountry(t);
-  if (country) { await applyFlag(country, true); done.push(country.name + ' flag'); }
+  // which balls this request is about
+  let targets = [];
+  const wantNew = /\b(add|another|new|second|third|one more|extra)\b.*\bball\b|\bnew one\b/.test(t);
+  if (named.length >= 2) {
+    // "germany and france": one ball per country, reusing the balls that are already there
+    if (state.balls.length === 1 && !state.balls[0].flag.img && !state.balls[0].stickers.length) { /* fill the empty first ball */ }
+    while (state.balls.length < Math.min(8, named.length)) addBall(true);
+    for (let i = 0; i < named.length && i < 8; i++) { await applyFlag(named[i], true, state.balls[i]); targets.push(state.balls[i]); }
+    if (state.balls.length > 1 && state.scene === 'square' && named.length >= 3) { setScene('wide'); }
+    done.push(named.slice(0, 8).map(c => c.name).join(' & '));
+  } else if (named.length === 1) {
+    const b = wantNew ? addBall(true) : active();
+    if (b) { await applyFlag(named[0], true, b); targets.push(b); done.push((wantNew ? 'New ball: ' : '') + named[0].name + ' flag'); }
+  } else if (wantNew) {
+    const b = addBall(true); if (b) { targets.push(b); done.push('Added a new ball'); }
+  }
+  if (!targets.length) targets = [active()];
+  state.active = targets[targets.length - 1].id;
 
   const shape = findBest(t, Object.entries(SHAPE_WORDS));
-  if (shape && shape !== state.shape && !(shape === 'ball' && !/\b(ball|sphere)\b/.test(t))) { setShape(shape, true); done.push(SHAPES[shape].name + ' shape'); }
+  if (shape && !(shape === 'ball' && !/\b(sphere)\b/.test(t) && !/\bmake it (a )?ball\b/.test(t))) {
+    targets.forEach(b => setShape(shape, true, b)); done.push(SHAPES[shape].name + ' shape');
+  }
+  if (/upside[ -]?down|flipped|polandball/.test(t)) targets.forEach(b => { if (b.flag.img) b.flag.fy = true; }), done.push('upside down');
+  if (/\bmirror(ed)?\b/.test(t)) targets.forEach(b => { if (b.flag.img) b.flag.fx = !b.flag.fx; }), done.push('mirrored');
+  if (/\b(face each other|facing each other|look at each other|looking at each other)\b/.test(t) && state.balls.length > 1) {
+    state.balls.forEach((b, i) => b.flip = i >= state.balls.length / 2); done.push('facing each other');
+  }
 
-  if (/upside[ -]?down|flipped|polandball/.test(t) && state.flag.img) { state.flag.fy = true; done.push('upside down'); }
-  if (/\bmirror(ed)?\b/.test(t) && state.flag.img) { state.flag.fx = !state.flag.fx; done.push('mirrored'); }
-
-  const eyeId = stickerIds.find(id => STICKERS[id].group === 'eye')
-    || (/\beyes\b/.test(t) && !state.stickers.some(s => STICKERS[s.type].group === 'eye') ? 'classic' : null);
-  if (eyeId) { removeGroup('eye'); state.stickers.push(placeFor(eyeId)); done.push(STICKERS[eyeId].name + ' eyes'); }
+  const stickerIds = findAll(t, Object.entries(WORDS));
+  const eyeId = stickerIds.find(id => STICKERS[id].group === 'eye');
+  targets.forEach(b => {
+    const id = eyeId || (/\beyes\b/.test(t) && !b.stickers.some(s => STICKERS[s.type].group === 'eye') ? 'classic' : null);
+    if (id) { removeGroup(b, 'eye'); putSticker(b, id); }
+  });
+  if (eyeId || /\beyes\b/.test(t)) done.push(STICKERS[eyeId || 'classic'].name + ' eyes');
   const hatId = stickerIds.find(id => STICKERS[id].group === 'hat');
-  if (hatId) { removeGroup('hat'); state.stickers.push(placeFor(hatId)); done.push(STICKERS[hatId].name); }
+  if (hatId) { targets.forEach(b => { removeGroup(b, 'hat'); putSticker(b, hatId); }); done.push(STICKERS[hatId].name); }
   stickerIds.filter(id => STICKERS[id].group === 'acc').forEach(id => {
-    if (!state.stickers.some(s => s.type === id)) state.stickers.push(placeFor(id));
+    targets.forEach(b => { if (!b.stickers.some(s => s.type === id)) putSticker(b, id); });
     done.push(STICKERS[id].name);
   });
 
   const quoted = raw.match(/["“”]([^"“”]{1,80})["“”]/) || raw.match(/\b(?:says?|saying)\s*:?\s+(.{1,80})$/i);
   if (quoted) {
-    const f = SH().face;
-    state.stickers = state.stickers.filter(s => s.type !== 'bubble');
-    state.stickers.push({ type: 'bubble', text: quoted[1].trim(), x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: .9, rot: 0, flip: false });
+    const b = targets[targets.length - 1], f = SHAPES[b.shape].face;
+    b.stickers = b.stickers.filter(s => s.type !== 'bubble');
+    b.stickers.push({ type: 'bubble', text: quoted[1].trim(), x: Math.min(560, f.x + 170), y: Math.max(90, f.y - 290), s: textScale(b), rot: 0, flip: false });
     done.push(`a speech bubble saying "${quoted[1].trim()}"`);
   }
 
@@ -1505,7 +1758,7 @@ async function botCommand(raw) {
   if (bg && (/\b(background|bg)\b/.test(t) || ['night', 'none', 'grass'].includes(bg))) { state.bg = { ...state.bg, type: bg }; done.push(BGS[bg].name + ' background'); }
   if (/\b(shine|shiny|shadow|3d)\b/.test(t)) { state.shading = !/\bno (shine|shadow)\b/.test(t); done.push(state.shading ? 'shine & shadow' : 'no shine'); }
 
-  if (done.length) { state.sel = -1; pushHistory(); syncUI(); render(); }
+  if (done.length) { state.sel = null; state.ballSel = false; pushHistory(); syncUI(); render(); }
   return done;
 }
 
@@ -1520,6 +1773,7 @@ function botSay(text, cls, act) {
 }
 function doBotAction(a) {
   if (a === 'export') { openExport(); return; }
+  if (a === 'addball') { addBall(); if (innerWidth < 1000) closeBot(); return; }
   if (a === 'flagmore') { openTab('flag'); $('flagMore').open = true; }
   else openTab(a);
   if (innerWidth < 1000) { closeBot(); document.querySelector('.side').scrollIntoView({ behavior: 'smooth' }); }
@@ -1542,13 +1796,13 @@ async function botAsk(q) {
       if (innerWidth < 1000) { setTimeout(() => { closeBot(); scrollTo({ top: 0, behavior: 'smooth' }); toast(reply); }, 700); }
     } else if (faq) { reply = faq.a; act = faq.act; }
   }
-  if (!reply) reply = 'I didn\'t get that one. You can ask how something works, or tell me what to make, like "Brazil with happy eyes and a top hat", "make it a cube" or "night background".';
+  if (!reply) reply = 'I didn\'t get that one. You can ask how something works, or tell me what to make, like "Germany and France with angry eyes", "make it a cube" or "night background".';
   setTimeout(() => { botSay(reply, 'b', act); }, 200);
 }
 let botStarted = false;
 function openBot() {
   $('bot').hidden = false; $('botBtn').hidden = true;
-  if (!botStarted) { botStarted = true; botSay('Hi, I\'m Bally 👋 Ask me how anything works, or just tell me what to make, like "Turkey with angry eyes and a fez".', 'b'); botQuick(); }
+  if (!botStarted) { botStarted = true; botSay('Hi, I\'m Bally 👋 Ask me how anything works, or just tell me what to make, like "Turkey with angry eyes and a fez" or "Germany and France".', 'b'); botQuick(); }
   if (innerWidth > 560) $('botIn').focus();
 }
 function closeBot() { $('bot').hidden = true; $('botBtn').hidden = false; }
@@ -1556,7 +1810,6 @@ function closeBot() { $('bot').hidden = true; $('botBtn').hidden = false; }
 function botSend() { const v = $('botIn').value; $('botIn').value = ''; botAsk(v); }
 $('botSend').addEventListener('click', botSend);
 $('botIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); botSend(); } });
-// Bally's face: a little Polandball
 function drawBotFaces() {
   document.querySelectorAll('canvas.face').forEach(c => {
     const g = c.getContext('2d'), s = c.width, r = s / 2 - 3;
@@ -1569,6 +1822,16 @@ function drawBotFaces() {
   });
 }
 
+/* ================== CLEAR ================== */
+function clearDrawings() { const b = active(); layerOf(b).ctx.clearRect(0, 0, W, W); b.dv = 0; pushHistory(); render(); toast('Drawing cleared'); }
+function resetAll() {
+  Object.keys(layers).forEach(k => delete layers[k]);
+  applySceneSize('square');
+  state.balls = [makeBall({ x: 400, y: 410, s: 1 })]; state.active = state.balls[0].id;
+  state.sel = null; state.ballSel = false; state.bg = { ...state.bg, type: 'none' }; state.shading = false; state.outline = 8;
+  pushHistory(); syncUI(); render(); toast('Cleared. Pick a flag to start again');
+}
+
 /* ================== KEYBOARD ================== */
 document.addEventListener('keydown', e => {
   const tg = e.target.tagName;
@@ -1577,8 +1840,7 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
-  if ((k === 'delete' || k === 'backspace') && state.sel >= 0) { e.preventDefault(); stAction('del'); return; }
-  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if ((k === 'delete' || k === 'backspace') && (state.sel || (state.ballSel && state.balls.length > 1))) { e.preventDefault(); stAction('del'); }
 });
 
 /* ================== AD SLOT ================== */
@@ -1595,8 +1857,9 @@ function setupAd() {
 
 /* ================== START ================== */
 (async function start() {
-  buildMask();
   buildStickerButtons();
+  applySceneSize('square');
+  state.balls = [makeBall({ x: 400, y: 410, s: 1 })]; state.active = state.balls[0].id;
   loadCountries();
   setupAd();
   drawBotFaces();

@@ -1,6 +1,6 @@
 # Countryball Studio
 
-Free online countryball maker with a light, simple interface: 265 real world flags, 4 shapes (ball, cube, triangle, brick), eyes, hats, speech bubbles and text, drawing, backgrounds, shine & shadow, random countryball, autosave, Bally, an offline helper that answers questions and builds countryballs from requests like "japan with angry eyes and a crown", and PNG export up to 2400px.
+Free online countryball maker with a light, simple interface: several countryballs in one picture (square or wide comic panel), 265 real world flags, 4 shapes (ball, cube, triangle, brick), eyes, hats, speech bubbles and text, drawing, backgrounds, shine & shadow, random countryball, autosave, Bally, an offline helper that answers questions and builds countryballs from requests like "japan with angry eyes and a crown", and PNG export up to 2400px.
 Works offline and can be installed as an app (PWA).
 
 - `index.html` – the app

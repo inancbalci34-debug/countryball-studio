@@ -1,6 +1,6 @@
 // Countryball Studio - offline support
 // When you update the app, change this version so phones get the new files.
-const CACHE = 'countryball-studio-v2';
+const CACHE = 'countryball-studio-v3';
 const FILES = [
   './',
   './index.html',
