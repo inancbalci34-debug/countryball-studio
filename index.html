@@ -375,7 +375,7 @@ footer b{color:var(--ink)}
   <div class="bot-head"><canvas class="face" width="72" height="72"></canvas><div><b>Bally</b><small>Countryball helper</small></div><button onclick="closeBot()" aria-label="Close help">×</button></div>
   <div class="bot-msgs" id="botMsgs" aria-live="polite"></div>
   <div class="bot-quick" id="botQuick"></div>
-  <form class="bot-form" id="botForm"><input id="botIn" placeholder="Ask, or tell me what to make…" autocomplete="off" aria-label="Your question"><button class="btn small main" type="submit">Send</button></form>
+  <div class="bot-form" id="botForm"><input id="botIn" placeholder="Ask, or tell me what to make…" autocomplete="off" enterkeyhint="send" aria-label="Your question"><button class="btn small main" type="button" id="botSend">Send</button></div>
 </div>
 
 <div class="toast" id="toast" role="status"></div>
@@ -582,19 +582,51 @@ function eye(c, x, y, side, o = {}) {
 }
 const both = (c, o, oR) => { eye(c, -EX, 0, -1, o); eye(c, EX, 0, 1, oR || o); };
 const arcEye = (c, x, y, up) => { c.beginPath(); up ? c.arc(x, y + 14, 28, Math.PI * 1.12, Math.PI * 1.88) : c.arc(x, y - 12, 28, Math.PI * .12, Math.PI * .88); c.lineWidth = 9; c.lineCap = 'round'; c.strokeStyle = INK; c.stroke(); };
+// angular eyes in the style of hand-drawn countryballs: draw the RIGHT eye, the left one is its mirror.
+// x grows outward from the middle of the face (inner corner ~20, outer corner ~110).
+function shapeEye(c, side, path, after) {
+  c.save(); if (side < 0) c.scale(-1, 1);
+  c.beginPath(); path(c); c.closePath();
+  c.fillStyle = '#fff'; c.fill(); c.lineWidth = 7; c.lineJoin = 'round'; c.strokeStyle = INK; c.stroke();
+  if (after) after(c);
+  c.restore();
+}
+function brow(c, side, pts, w) { c.save(); if (side < 0) c.scale(-1, 1); line(c, pts, w || 8); c.restore(); }
+const pair = fn => c => { fn(c, -1); fn(c, 1); };
 const EYE = { w: 220, h: 110, dy: -0.12, group: 'eye' };
 const EYES = {
+  glare:     { name: 'Glare', draw: pair((c, s) => {
+      shapeEye(c, s, g => { g.moveTo(18, 6); g.lineTo(112, -16); g.lineTo(104, 12); g.lineTo(26, 15); });
+      brow(c, s, [[14, -12], [114, -40]], 7);
+    }) },
+  smug:      { name: 'Smug', draw: pair((c, s) => {
+      shapeEye(c, s, g => { g.moveTo(14, -6); g.lineTo(114, -6); g.bezierCurveTo(104, 30, 34, 32, 14, -6); });
+      c.save(); if (s < 0) c.scale(-1, 1); c.beginPath(); c.moveTo(36, -34); c.quadraticCurveTo(66, -44, 98, -36); c.lineWidth = 7; c.lineCap = 'round'; c.strokeStyle = INK; c.stroke(); c.restore();
+    }) },
+  furious:   { name: 'Furious', draw: pair((c, s) => {
+      shapeEye(c, s, g => { g.moveTo(16, -8); g.lineTo(112, -20); g.lineTo(98, 4); g.lineTo(34, 30); });
+      brow(c, s, [[10, -22], [104, -44]], 8);
+      brow(c, s, [[40, -38], [96, -52]], 6);
+    }) },
+  worried:   { name: 'Worried', draw(c) {
+      c.save(); c.scale(-1, 1); // big eye on the left, small triangle on the right
+      shapeEye(c, 1, g => { g.moveTo(104, 8); g.quadraticCurveTo(70, 26, 24, 10); g.lineTo(24, -34); });
+      shapeEye(c, 1, g => { g.moveTo(-38, -26); g.lineTo(-38, 10); g.lineTo(-86, 10); });
+      c.restore();
+    } },
+  dead:      { name: 'Dead', draw: pair((c, s) => {
+      c.save(); if (s < 0) c.scale(-1, 1); c.translate(EX, 0); c.rotate(-0.15);
+      line(c, [[-30, 0], [30, 0]], 9); line(c, [[0, -30], [0, 30]], 9); c.restore();
+    }) },
   classic:   { name: 'Normal', draw(c) { both(c, {}); } },
   happy:     { name: 'Happy', draw(c) { arcEye(c, -EX, 0, true); arcEye(c, EX, 0, true); } },
   angry:     { name: 'Angry', draw(c) { both(c, { top: [-36, 2] }); } },
-  furious:   { name: 'Furious', draw(c) { both(c, { top: [-30, 10], pupil: { r: 6, dy: 14 } }); } },
   sad:       { name: 'Sad', draw(c) { both(c, { top: [6, -30] }); } },
   crying:    { name: 'Crying', w: 220, h: 200, draw(c) {
       for (const x of [-EX, EX]) { c.beginPath(); rr(c, x - 9, 22, 18, 74, 9); c.fillStyle = '#5cc8ff'; c.fill(); c.lineWidth = 4; c.strokeStyle = '#1b7fc4'; c.stroke(); }
       both(c, { top: [6, -30] });
     } },
   lined:     { name: 'Unamused', draw(c) { both(c, { top: [-4, -4] }); } },
-  smug:      { name: 'Smug', draw(c) { both(c, { top: [-2, -10], bot: [26, 30], pupil: { r: 8, dx: 12, dy: 6 } }); } },
   squint:    { name: 'Suspicious', draw(c) { eye(c, -EX, 0, -1, { top: [-8, -2] }); eye(c, EX, 0, 1, { top: [2, 6], bot: [24, 22] }); } },
   side:      { name: 'Side-eye', draw(c) { both(c, { top: [-10, -10], pupil: { r: 9, dx: 15, dy: 4 } }); } },
   surprised: { name: 'Surprised', draw(c) { both(c, { rx: 34, ry: 46, pupil: { r: 6 } }); } },
@@ -620,7 +652,6 @@ const EYES = {
     } },
   love:      { name: 'In love', draw(c) { for (const x of [-EX, EX]) { heart(c, x, 6, 1.25); c.fillStyle = '#ef3b4f'; c.fill(); c.lineWidth = 6; c.strokeStyle = INK; c.lineJoin = 'round'; c.stroke(); } } },
   stars:     { name: 'Starstruck', draw(c) { both(c, { rx: 32, ry: 40, inner: (g, x, y) => { star(g, x, y + 2, 22); g.fillStyle = '#ffc61a'; g.fill(); } }); } },
-  dead:      { name: 'Dead', draw(c) { for (const x of [-EX, EX]) { line(c, [[x - 22, -22], [x + 22, 22]], 10); line(c, [[x + 22, -22], [x - 22, 22]], 10); } } },
   derp:      { name: 'Derp', draw(c) {
       eye(c, -EX, 0, -1, { rx: 34, ry: 42, pupil: { r: 9, dx: -10, dy: 12 } });
       eye(c, EX, -6, 1, { rx: 22, ry: 28, pupil: { r: 7, dx: 6, dy: -8 } });
@@ -1382,7 +1413,7 @@ const BOT = [
 // words Bally understands for each item
 const WORDS = {
   classic: 'normal,plain,classic,normal eyes', happy: 'happy,smiling,smile,glad', angry: 'angry,mad', furious: 'furious,rage,raging',
-  sad: 'sad,upset', crying: 'crying,cry,tears,weeping', lined: 'unamused,bored,annoyed,meh', smug: 'smug,proud',
+  sad: 'sad,upset', crying: 'crying,cry,tears,weeping', lined: 'unamused,bored,annoyed,meh', smug: 'smug,proud,content,relaxed', glare: 'glare,glaring,stare,staring,death stare', worried: 'worried,anxious,concerned,nervous eyes',
   squint: 'suspicious,sus', side: 'side eye,side-eye,sideeye', surprised: 'surprised,shocked,wow eyes', scared: 'scared,afraid,terrified,frightened',
   determined: 'determined,serious,focused', laughing: 'laughing,lol,xd', wink: 'wink,winking', sleepy: 'sleepy,sleeping,asleep',
   tired: 'tired,exhausted', love: 'in love,heart eyes,hearts,loving', stars: 'starstruck,star eyes,stars', dead: 'dead,x eyes', derp: 'derp,crazy,silly,goofy',
@@ -1518,7 +1549,10 @@ function openBot() {
   if (innerWidth > 560) $('botIn').focus();
 }
 function closeBot() { $('bot').hidden = true; $('botBtn').hidden = false; }
-$('botForm').onsubmit = e => { e.preventDefault(); const v = $('botIn').value; $('botIn').value = ''; botAsk(v); };
+// no <form> here: some previews block form submits, so Send and Enter are wired up directly
+function botSend() { const v = $('botIn').value; $('botIn').value = ''; botAsk(v); }
+$('botSend').addEventListener('click', botSend);
+$('botIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); botSend(); } });
 // Bally's face: a little Polandball
 function drawBotFaces() {
   document.querySelectorAll('canvas.face').forEach(c => {
