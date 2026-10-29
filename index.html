@@ -119,6 +119,8 @@ details.more .in{padding:2px 12px 12px;display:flex;flex-direction:column;gap:8p
 .opt{display:grid;grid-template-columns:70px 1fr 42px;align-items:center;gap:8px;font-size:14px}
 .val{color:var(--muted);font-size:13px;text-align:right}
 .btn-row{display:flex;flex-wrap:wrap;gap:6px}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
 select{border:1px solid var(--line);border-radius:8px;padding:5px;background:#fff}
 input[type=range]{width:100%;accent-color:var(--ink)}
 
@@ -283,9 +285,10 @@ footer b{color:var(--ink)}
           <div class="opt"><span>Up/down</span><input type="range" id="fY" min="-100" max="100" value="0"><span class="val" id="fYV">0</span></div>
           <div class="opt"><span>Fit</span><select id="fMode"><option value="cover">Fill the shape</option><option value="contain">Show whole flag</option></select><span></span></div>
           <div class="btn-row">
-            <label class="btn small">📁 Use my own image<input type="file" id="upload" accept="image/*" hidden></label>
+            <label class="btn small upl">📁 Use my own image<input type="file" id="upload" accept="image/*"></label>
             <button class="btn small warn" onclick="removeFlag()">✕ Remove flag</button>
           </div>
+          <p class="help" style="margin:0">You can also copy any picture and paste it here (Ctrl+V).</p>
         </div>
       </details>
       <div class="count" id="count"></div>
@@ -377,6 +380,16 @@ footer b{color:var(--ink)}
       <button class="btn small" id="copyBtn" onclick="doExport('copy')">📋 Copy</button>
       <button class="btn small quiet" onclick="closeExport()">Close</button>
     </div>
+  </div>
+</div>
+
+<!-- shown on phones (and inside previews) where downloads can be blocked -->
+<div class="modal" id="saveModal" onclick="if(event.target===this)closeSave()">
+  <div class="dlg" role="dialog" aria-label="Save image">
+    <h2>Your countryball</h2>
+    <img id="savedImg" alt="Your countryball" style="width:100%;border-radius:12px;border:1px solid var(--line);background:repeating-conic-gradient(#eef1f6 0 25%,#fff 0 50%) 0 0/20px 20px">
+    <p class="help" style="margin:0;color:var(--muted);font-size:15px">If it didn't download, <b>press and hold the picture</b> and choose <b>Save image</b>.</p>
+    <button class="btn small quiet" onclick="closeSave()">Close</button>
   </div>
 </div>
 
@@ -1413,12 +1426,19 @@ $('fRot').oninput = e => { active().flag.rot = +e.target.value; $('fRotV').textC
 $('fX').oninput = e => { active().flag.ox = e.target.value / 100; $('fXV').textContent = e.target.value; render(); };
 $('fY').oninput = e => { active().flag.oy = e.target.value / 100; $('fYV').textContent = e.target.value; render(); };
 ['fZoom', 'fRot', 'fX', 'fY'].forEach(id => $(id).onchange = () => { if (active().flag.img) pushHistory(); });
-$('upload').onchange = e => {
-  const f = e.target.files[0]; if (!f) return;
+function useOwnImage(file) {
+  if (!file || !/^image\//.test(file.type)) { toast('That file is not an image'); return; }
   const rd = new FileReader();
-  rd.onload = () => { const im = new Image(); im.onload = () => applyFlag({ code: 'custom-' + Date.now(), name: f.name.replace(/\.[^.]+$/, ''), img: im }); im.src = rd.result; };
-  rd.readAsDataURL(f); e.target.value = '';
-};
+  rd.onload = () => { const im = new Image(); im.onload = () => applyFlag({ code: 'custom-' + Date.now(), name: (file.name || 'My flag').replace(/\.[^.]+$/, ''), img: im }); im.onerror = () => toast('This image could not be opened'); im.src = rd.result; };
+  rd.onerror = () => toast('This image could not be read');
+  rd.readAsDataURL(file);
+}
+// pasting an image (Ctrl+V, or long-press → Paste) puts it on the selected ball
+document.addEventListener('paste', e => {
+  const f = [...(e.clipboardData && e.clipboardData.files || [])].find(x => /^image\//.test(x.type));
+  if (f) { e.preventDefault(); useOwnImage(f); }
+});
+$('upload').onchange = e => { const f = e.target.files[0]; if (f) useOwnImage(f); e.target.value = ''; };
 
 /* ================== STICKERS UI ================== */
 function buildStickerButtons() {
@@ -1586,12 +1606,22 @@ async function doExport(how) {
     catch (e) { toast('This browser blocks copying. Use Download instead.'); }
     return;
   }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = fileName();
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
-  toast('Downloaded ✔'); closeExport();
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = fileName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+  } catch (e) {}
+  closeExport();
+  // phones and in-app previews often block downloads: also show the picture so it can be saved by long-press
+  if (inFrame || matchMedia('(pointer:coarse)').matches) {
+    const rd = new FileReader();
+    rd.onload = () => { $('savedImg').src = rd.result; $('saveModal').classList.add('on'); };
+    rd.readAsDataURL(blob);
+  } else toast('Downloaded ✔');
 }
+const inFrame = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+function closeSave() { $('saveModal').classList.remove('on'); }
 
 /* ================== HELPER BOT ("Bally") ==================
    Works offline, nothing leaves the page. Bally does two things:
@@ -1835,7 +1865,7 @@ function resetAll() {
 /* ================== KEYBOARD ================== */
 document.addEventListener('keydown', e => {
   const tg = e.target.tagName;
-  if (e.key === 'Escape') { closeExport(); closeBot(); return; }
+  if (e.key === 'Escape') { closeExport(); closeSave(); closeBot(); return; }
   if (tg === 'TEXTAREA' || (tg === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'checkbox')) return;
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
